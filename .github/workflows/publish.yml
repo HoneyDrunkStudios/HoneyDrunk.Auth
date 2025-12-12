@@ -1,0 +1,123 @@
+﻿name: Publish to NuGet
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (without v prefix, e.g., 0.1.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  prepare:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      version-tag: ${{ steps.get_version.outputs.version-tag }}
+    steps:
+      - name: Determine version
+        id: get_version
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            VERSION="${{ github.event.inputs.version }}"
+            VERSION_TAG="v${VERSION}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            VERSION_TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "version=$VERSION" >>"$GITHUB_OUTPUT"
+          echo "version-tag=$VERSION_TAG" >>"$GITHUB_OUTPUT"
+          echo "Publishing version: $VERSION"
+          echo "Publishing tag: $VERSION_TAG"
+
+  release:
+    name: Build, Pack & Publish
+    needs: prepare
+    uses: HoneyDrunkStudios/HoneyDrunk.Actions/.github/workflows/release.yml@main
+    with:
+      dotnet-version: '10.0.x'
+      configuration: 'Release'
+      runs-on: 'ubuntu-latest'
+      project-path: 'HoneyDrunk.Auth/HoneyDrunk.Auth.slnx'
+      enable-nuget-publish: true
+      nuget-source: 'https://api.nuget.org/v3/index.json'
+      actions-ref: 'main'
+    secrets:
+      nuget-api-key: ${{ secrets.NUGET_API_KEY }}
+
+  github-release:
+    name: Create GitHub Release
+    needs: [prepare, release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.version-tag }}
+          name: HoneyDrunk.Auth ${{ needs.prepare.outputs.version-tag }}
+          body: |
+            ## HoneyDrunk.Auth ${{ needs.prepare.outputs.version-tag }}
+
+            Authentication and authorization library for .NET with JWT validation and policy-based authorization.
+
+            ### 📦 Packages
+
+            **HoneyDrunk.Auth.Abstractions** - Core abstractions and contracts
+
+            ```xml
+            <PackageReference Include="HoneyDrunk.Auth.Abstractions" Version="${{ needs.prepare.outputs.version }}" />
+            ```
+
+            **HoneyDrunk.Auth** - JWT authentication and authorization implementation
+
+            ```xml
+            <PackageReference Include="HoneyDrunk.Auth" Version="${{ needs.prepare.outputs.version }}" />
+            ```
+
+            **HoneyDrunk.Auth.AspNetCore** - ASP.NET Core integration middleware
+
+            ```xml
+            <PackageReference Include="HoneyDrunk.Auth.AspNetCore" Version="${{ needs.prepare.outputs.version }}" />
+            ```
+
+            ### 🔗 Links
+            - [NuGet: HoneyDrunk.Auth.Abstractions](https://www.nuget.org/packages/HoneyDrunk.Auth.Abstractions/${{ needs.prepare.outputs.version }})
+            - [NuGet: HoneyDrunk.Auth](https://www.nuget.org/packages/HoneyDrunk.Auth/${{ needs.prepare.outputs.version }})
+            - [NuGet: HoneyDrunk.Auth.AspNetCore](https://www.nuget.org/packages/HoneyDrunk.Auth.AspNetCore/${{ needs.prepare.outputs.version }})
+            - [Documentation](https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth#readme)
+
+            ### 🚀 Quick Start
+
+            ```csharp
+            using HoneyDrunk.Auth.AspNetCore.Middleware;
+
+            var builder = WebApplication.CreateBuilder(args);
+
+            // Register auth services
+            builder.Services.AddSingleton<IAuthenticationProvider, BearerTokenAuthenticationProvider>();
+            builder.Services.AddSingleton<IAuthorizationPolicy, DefaultAuthorizationPolicy>();
+
+            var app = builder.Build();
+
+            // Add authentication middleware
+            app.UseMiddleware<HoneyDrunkAuthMiddleware>();
+
+            app.Run();
+            ```
+          draft: false
+          prerelease: false

@@ -4,7 +4,30 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CA1873</NoWarn>
+
+    <!-- Package Metadata -->
+    <PackageId>HoneyDrunk.Auth</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>HoneyDrunk Studios</Authors>
+    <Description>Authentication and authorization library for .NET. Provides JWT Bearer token validation, policy-based authorization, Vault-backed signing key management, and integration with HoneyDrunk.Kernel for Grid-aware context propagation.</Description>
+    <PackageReleaseNotes>v0.1.0: Initial release with JWT authentication, policy-based authorization, and Vault integration.</PackageReleaseNotes>
+    <PackageTags>authentication;authorization;jwt;bearer;security;identity;claims;policy;vault;kernel;grid</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth</PackageProjectUrl>
+
+    <!-- Symbol Package Configuration -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="HoneyDrunk.Auth.Tests" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="HoneyDrunk.Kernel" Version="0.3.0" />
@@ -13,10 +36,19 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="HoneyDrunk.Vault" Version="0.1.0" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HoneyDrunk.Auth.Abstractions\HoneyDrunk.Auth.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Update="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.101" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>
