@@ -42,4 +42,8 @@
     <PackageReference Update="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.101" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Secrets\" />
+  </ItemGroup>
+
 </Project>
