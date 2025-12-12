@@ -35,6 +35,8 @@ public sealed class HoneyDrunkAuthMiddleware(RequestDelegate next, ILogger<Honey
         HttpContext context,
         IAuthenticationProvider authProvider)
     {
+        ArgumentNullException.ThrowIfNull(authProvider);
+
         var authorizationHeader = context.Request.Headers[HeaderNames.Authorization].ToString();
 
         if (string.IsNullOrEmpty(authorizationHeader) ||

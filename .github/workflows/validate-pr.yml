@@ -27,7 +27,7 @@ jobs:
       runs-on: 'ubuntu-latest'
       working-directory: 'HoneyDrunk.Auth'
       # Optional: target a specific solution or project
-      # project-path: './HoneyDrunk.Auth.sln'
+      # project-path: './HoneyDrunk.Auth.slnx'
       enable-secret-scan: true
       enable-accessibility-check: false
       post-pr-summary: true

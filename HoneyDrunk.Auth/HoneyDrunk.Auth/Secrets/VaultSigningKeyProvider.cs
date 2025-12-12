@@ -46,10 +46,16 @@ public sealed class VaultSigningKeyProvider(
         if (!secretResult.IsSuccess || secretResult.Value is null)
         {
             _logger.LogError("Failed to retrieve signing keys from Vault: {Error}", secretResult.ErrorMessage);
-            return [];
+            throw new InvalidOperationException($"Failed to retrieve signing keys from Vault: {secretResult.ErrorMessage}");
         }
 
         var signingKeys = ParseSigningKeys(secretResult.Value.Value);
+        if (signingKeys.Count == 0)
+        {
+            _logger.LogWarning("No valid signing keys found in Vault secret");
+            return [];
+        }
+
         var activeKeys = signingKeys.Where(k => k.IsActive).ToList();
 
         _logger.LogDebug("Retrieved {KeyCount} active signing keys from Vault", activeKeys.Count);
@@ -78,19 +84,41 @@ public sealed class VaultSigningKeyProvider(
         return TimeSpan.FromSeconds(clockSkewSeconds);
     }
 
-    private static List<SigningKeyInfo> ParseSigningKeys(string json)
+    private static bool IsValidBase64Key(SigningKeyInfo keyInfo)
     {
-        var keys = JsonSerializer.Deserialize<List<SigningKeyInfoDto>>(json, JsonOptions) ?? [];
-
-        return [.. keys
-            .Where(k => !string.IsNullOrWhiteSpace(k.Kid) && !string.IsNullOrWhiteSpace(k.Key))
-            .Select(k => new SigningKeyInfo(k.Kid!, k.Alg ?? "HS256", k.Key!, k.Active ?? true))];
+        try
+        {
+            _ = Convert.FromBase64String(keyInfo.KeyMaterial);
+            return true;
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
     }
 
     private static SecurityKey CreateSecurityKey(SigningKeyInfo keyInfo)
     {
         var keyBytes = Convert.FromBase64String(keyInfo.KeyMaterial);
         return new SymmetricSecurityKey(keyBytes) { KeyId = keyInfo.KeyId };
+    }
+
+    private List<SigningKeyInfo> ParseSigningKeys(string json)
+    {
+        try
+        {
+            var keys = JsonSerializer.Deserialize<List<SigningKeyInfoDto>>(json, JsonOptions) ?? [];
+
+            return [.. keys
+                .Where(k => !string.IsNullOrWhiteSpace(k.Kid) && !string.IsNullOrWhiteSpace(k.Key))
+                .Select(k => new SigningKeyInfo(k.Kid!, k.Alg ?? "HS256", k.Key!, k.Active ?? true))
+                .Where(IsValidBase64Key)];
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogError(ex, "Failed to parse signing keys JSON from Vault");
+            return [];
+        }
     }
 
     /// <summary>

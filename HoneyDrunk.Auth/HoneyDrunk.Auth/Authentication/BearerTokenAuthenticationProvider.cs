@@ -134,8 +134,11 @@ public sealed class BearerTokenAuthenticationProvider(
             SecurityTokenMalformedException => AuthenticationResult.Fail(
                 AuthenticationFailureCode.MalformedCredential, "Token format is invalid"),
 
+            null => AuthenticationResult.Fail(
+                AuthenticationFailureCode.InvalidSignature, "Token validation failed"),
+
             _ => AuthenticationResult.Fail(
-                AuthenticationFailureCode.InvalidSignature, exception?.Message ?? "Token validation failed"),
+                AuthenticationFailureCode.InvalidSignature, exception.Message),
         };
     }
 
