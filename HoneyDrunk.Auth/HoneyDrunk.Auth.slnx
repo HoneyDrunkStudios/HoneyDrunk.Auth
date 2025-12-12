@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="HoneyDrunk.Auth.Abstractions/HoneyDrunk.Auth.Abstractions.csproj" />
+  <Project Path="HoneyDrunk.Auth.AspNetCore/HoneyDrunk.Auth.AspNetCore.csproj" />
+  <Project Path="HoneyDrunk.Auth.Tests/HoneyDrunk.Auth.Tests.csproj" />
+  <Project Path="HoneyDrunk.Auth/HoneyDrunk.Auth.csproj" />
+</Solution>
