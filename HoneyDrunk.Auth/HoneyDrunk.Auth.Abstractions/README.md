@@ -1,4 +1,4 @@
-# HoneyDrunk.Auth.Abstractions
+﻿# HoneyDrunk.Auth.Abstractions
 
 [![NuGet](https://img.shields.io/nuget/v/HoneyDrunk.Auth.Abstractions.svg)](https://www.nuget.org/packages/HoneyDrunk.Auth.Abstractions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -6,11 +6,11 @@
 
 > **Pure contracts and abstractions for HoneyDrunk.Auth** - Zero dependencies, designed for shared libraries and domain projects.
 
-## ?? What Is This?
+## 📋 What Is This?
 
 This package provides the foundational interfaces and models used throughout the HoneyDrunk.Auth ecosystem. It has **no external dependencies**, making it ideal for defining contracts in shared libraries or domain projects without pulling in runtime implementations.
 
-## ?? Installation
+## 📦 Installation
 
 ```sh
 dotnet add package HoneyDrunk.Auth.Abstractions
@@ -20,7 +20,7 @@ dotnet add package HoneyDrunk.Auth.Abstractions
 <PackageReference Include="HoneyDrunk.Auth.Abstractions" Version="0.1.0" />
 ```
 
-## ?? Key Types
+## 🔑 Key Types
 
 ### Interfaces
 
@@ -54,7 +54,7 @@ dotnet add package HoneyDrunk.Auth.Abstractions
 |----------|-------------|
 | `AuthClaimTypes` | Standard JWT claim type constants (sub, role, scope, etc.) |
 
-## ?? Usage Example
+## 💡 Usage Example
 
 ```csharp
 // Create an authorization request
@@ -73,19 +73,19 @@ if (identity.HasClaim(AuthClaimTypes.Role, "admin"))
 var tenantId = identity.GetClaimValue(AuthClaimTypes.TenantId);
 ```
 
-## ?? Related Packages
+## 🔗 Related Packages
 
 | Package | Description |
 |---------|-------------|
 | **[HoneyDrunk.Auth](../HoneyDrunk.Auth/README.md)** | Core runtime with JWT validation and Vault integration |
 | **[HoneyDrunk.Auth.AspNetCore](../HoneyDrunk.Auth.AspNetCore/README.md)** | ASP.NET Core middleware and extensions |
 
-## ?? Documentation
+## 📖 Documentation
 
 - **[Abstractions Guide](../docs/Abstractions.md)** - Detailed documentation for all types
 - **[FILE_GUIDE.md](../docs/FILE_GUIDE.md)** - Complete architecture reference
 
-## ?? License
+## ⚖️ License
 
 This project is licensed under the [MIT License](../LICENSE).
 
@@ -93,6 +93,6 @@ This project is licensed under the [MIT License](../LICENSE).
 
 <div align="center">
 
-**Built with ?? by HoneyDrunk Studios**
+**Built with ❤️ by HoneyDrunk Studios**
 
 </div>

@@ -1,4 +1,4 @@
-# HoneyDrunk.Auth.AspNetCore
+﻿# HoneyDrunk.Auth.AspNetCore
 
 [![NuGet](https://img.shields.io/nuget/v/HoneyDrunk.Auth.AspNetCore.svg)](https://www.nuget.org/packages/HoneyDrunk.Auth.AspNetCore)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -6,11 +6,11 @@
 
 > **ASP.NET Core integration for HoneyDrunk.Auth** - Middleware, identity accessors, and authorization endpoint helpers.
 
-## ?? What Is This?
+## 🌐 What Is This?
 
 This package provides middleware and extensions for integrating HoneyDrunk.Auth with ASP.NET Core applications. It includes authentication middleware that automatically validates Bearer tokens, HttpContext-based identity accessors, and convenient authorization helpers for endpoints.
 
-## ?? Installation
+## 📦 Installation
 
 ```sh
 dotnet add package HoneyDrunk.Auth.AspNetCore
@@ -20,7 +20,7 @@ dotnet add package HoneyDrunk.Auth.AspNetCore
 <PackageReference Include="HoneyDrunk.Auth.AspNetCore" Version="0.1.0" />
 ```
 
-## ?? Quick Start
+## 🚀 Quick Start
 
 ### 1. Register Services
 
@@ -70,7 +70,7 @@ app.MapPost("/admin/action", async (HttpContext ctx) =>
 });
 ```
 
-## ?? Key Components
+## 🔧 Key Components
 
 ### Middleware
 
@@ -94,7 +94,7 @@ app.MapPost("/admin/action", async (HttpContext ctx) =>
 | `AuthorizeOrForbidAsync()` | Evaluates authorization, sends 403 if denied |
 | `RequireAuthentication()` | Returns 401 if not authenticated |
 
-## ?? Usage Examples
+## 💡 Usage Examples
 
 ### Check Authentication
 
@@ -164,7 +164,7 @@ app.MapGet("/protected", (HttpContext ctx) =>
 });
 ```
 
-## ?? Middleware Pipeline
+## 🔀 Middleware Pipeline
 
 The middleware should be placed after `UseGridContext()` for proper context propagation:
 
@@ -180,7 +180,7 @@ app.MapControllers();
 app.Run();
 ```
 
-## ?? What Gets Registered
+## 📋 What Gets Registered
 
 When you call `AddHoneyDrunkAuthAspNetCore()`:
 
@@ -195,7 +195,7 @@ When you call `AddHoneyDrunkAuthAspNetCore()`:
 | `IHttpContextAccessor` | `HttpContextAccessor` | Singleton |
 | `IAuthenticatedIdentityAccessor` | `HttpContextIdentityAccessor` | Singleton |
 
-## ?? Dependencies
+## 📚 Dependencies
 
 | Package | Purpose |
 |---------|---------|
@@ -203,20 +203,20 @@ When you call `AddHoneyDrunkAuthAspNetCore()`:
 | `HoneyDrunk.Auth.Abstractions` | Core contracts |
 | `HoneyDrunk.Kernel` | Grid context and telemetry |
 
-## ?? Related Packages
+## 🔗 Related Packages
 
 | Package | Description |
 |---------|-------------|
 | **[HoneyDrunk.Auth.Abstractions](../HoneyDrunk.Auth.Abstractions/README.md)** | Core contracts (no dependencies) |
 | **[HoneyDrunk.Auth](../HoneyDrunk.Auth/README.md)** | Core runtime with JWT validation |
 
-## ?? Documentation
+## 📖 Documentation
 
 - **[AspNetCore Guide](../docs/AspNetCore.md)** - Detailed middleware and extension documentation
 - **[DependencyInjection Guide](../docs/DependencyInjection.md)** - Service registration
 - **[FILE_GUIDE.md](../docs/FILE_GUIDE.md)** - Complete architecture reference
 
-## ?? License
+## ⚖️ License
 
 This project is licensed under the [MIT License](../LICENSE).
 
@@ -224,6 +224,6 @@ This project is licensed under the [MIT License](../LICENSE).
 
 <div align="center">
 
-**Built with ?? by HoneyDrunk Studios**
+**Built with ❤️ by HoneyDrunk Studios**
 
 </div>

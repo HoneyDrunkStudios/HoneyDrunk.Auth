@@ -1,4 +1,4 @@
-# HoneyDrunk.Auth
+﻿# HoneyDrunk.Auth
 
 [![NuGet](https://img.shields.io/nuget/v/HoneyDrunk.Auth.svg)](https://www.nuget.org/packages/HoneyDrunk.Auth)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -6,11 +6,11 @@
 
 > **Core authentication and authorization runtime** - JWT Bearer token validation, policy-based authorization, and Vault-backed signing key management.
 
-## ?? What Is This?
+## 🔐 What Is This?
 
 This package provides the core runtime implementation for HoneyDrunk.Auth. It includes JWT Bearer token validation, policy-based authorization, and integrates with HoneyDrunk.Kernel for telemetry and lifecycle management, and HoneyDrunk.Vault for secure secret retrieval.
 
-## ?? Installation
+## 📦 Installation
 
 ```sh
 dotnet add package HoneyDrunk.Auth
@@ -20,7 +20,7 @@ dotnet add package HoneyDrunk.Auth
 <PackageReference Include="HoneyDrunk.Auth" Version="0.1.0" />
 ```
 
-## ?? Key Components
+## 🔧 Key Components
 
 ### Authentication
 
@@ -56,7 +56,7 @@ dotnet add package HoneyDrunk.Auth
 |-----------|-------------|
 | `AuthTelemetry` | OpenTelemetry activity and tag constants |
 
-## ?? Usage
+## 🚀 Usage
 
 ### Register Services
 
@@ -119,7 +119,7 @@ else
 }
 ```
 
-## ?? Dependencies
+## 📚 Dependencies
 
 | Package | Purpose |
 |---------|---------|
@@ -128,14 +128,14 @@ else
 | `HoneyDrunk.Vault` | Secret management |
 | `Microsoft.IdentityModel.JsonWebTokens` | JWT validation |
 
-## ?? Related Packages
+## 🔗 Related Packages
 
 | Package | Description |
 |---------|-------------|
 | **[HoneyDrunk.Auth.Abstractions](../HoneyDrunk.Auth.Abstractions/README.md)** | Core contracts (no dependencies) |
 | **[HoneyDrunk.Auth.AspNetCore](../HoneyDrunk.Auth.AspNetCore/README.md)** | ASP.NET Core middleware and extensions |
 
-## ?? Documentation
+## 📖 Documentation
 
 - **[Authentication Guide](../docs/Authentication.md)** - JWT Bearer token validation
 - **[Authorization Guide](../docs/Authorization.md)** - Policy-based access control
@@ -143,7 +143,7 @@ else
 - **[Lifecycle Guide](../docs/Lifecycle.md)** - Health and readiness
 - **[FILE_GUIDE.md](../docs/FILE_GUIDE.md)** - Complete architecture reference
 
-## ?? License
+## ⚖️ License
 
 This project is licensed under the [MIT License](../LICENSE).
 
@@ -151,6 +151,6 @@ This project is licensed under the [MIT License](../LICENSE).
 
 <div align="center">
 
-**Built with ?? by HoneyDrunk Studios**
+**Built with ❤️ by HoneyDrunk Studios**
 
 </div>

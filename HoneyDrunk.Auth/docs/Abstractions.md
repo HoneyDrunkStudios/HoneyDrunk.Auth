@@ -700,7 +700,7 @@ The Abstractions package provides the foundational contracts for the entire Auth
 Key design decisions:
 - **Zero dependencies** - Can be referenced by any project
 - **Bearer-canonical** - Bearer is the official scheme; others are exceptional
-- **Subject-based identity** - Works for users, services, agents, and	nodes
+- **Subject-based identity** - Works for users, services, agents, and nodes
 - **Effectively immutable** - All types are read-only after construction
 - **Result types over exceptions** - `AuthenticationResult` and `AuthorizationDecision` encapsulate outcomes
 - **Structured codes** - Enums provide stable, versionable error codes
