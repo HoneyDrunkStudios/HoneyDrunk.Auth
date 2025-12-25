@@ -2,7 +2,18 @@
   <Folder Name="/Docs/">
     <File Path="../README.md" />
   </Folder>
-  <Folder Name="/Docs/FileGuide/" />
+  <Folder Name="/Docs/FileGuide/">
+    <File Path="docs/Abstractions.md" />
+    <File Path="docs/ARCHITECTURE.md" />
+    <File Path="docs/AspNetCore.md" />
+    <File Path="docs/Authentication.md" />
+    <File Path="docs/Authorization.md" />
+    <File Path="docs/DependencyInjection.md" />
+    <File Path="docs/FILE_GUIDE.md" />
+    <File Path="docs/Lifecycle.md" />
+    <File Path="docs/Secrets.md" />
+    <File Path="docs/Telemetry.md" />
+  </Folder>
   <Folder Name="/Pipelines/">
     <File Path="../.github/workflows/publish.yml" />
     <File Path="../.github/workflows/validate-pr.yml" />
