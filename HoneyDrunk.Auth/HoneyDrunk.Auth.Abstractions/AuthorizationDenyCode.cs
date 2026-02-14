@@ -49,6 +49,11 @@ public enum AuthorizationDenyCode
     PolicyNotSatisfied = 7,
 
     /// <summary>
+    /// The requested policy was not found.
+    /// </summary>
+    PolicyNotFound = 8,
+
+    /// <summary>
     /// An internal error occurred during authorization.
     /// </summary>
     InternalError = 99,

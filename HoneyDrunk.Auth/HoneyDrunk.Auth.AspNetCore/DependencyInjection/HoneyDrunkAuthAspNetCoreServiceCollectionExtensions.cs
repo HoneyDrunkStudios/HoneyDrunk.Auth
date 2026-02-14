@@ -18,7 +18,7 @@ public static class HoneyDrunkAuthAspNetCoreServiceCollectionExtensions
     /// <remarks>
     /// This registers:
     /// <list type="bullet">
-    /// <item>Core Auth services via <see cref="HoneyDrunkAuthServiceCollectionExtensions.AddHoneyDrunkAuth"/></item>
+    /// <item>Core Auth services via <see cref="HoneyDrunkAuthServiceCollectionExtensions.AddHoneyDrunkAuth(IServiceCollection)"/></item>
     /// <item><see cref="IAuthenticatedIdentityAccessor"/> - HTTP context-based identity accessor</item>
     /// <item><see cref="IHttpContextAccessor"/> - if not already registered</item>
     /// </list>
