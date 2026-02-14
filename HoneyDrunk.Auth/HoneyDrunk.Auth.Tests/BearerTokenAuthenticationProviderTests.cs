@@ -3,6 +3,7 @@ using HoneyDrunk.Auth.Authentication;
 using HoneyDrunk.Auth.Tests.Helpers;
 using HoneyDrunk.Kernel.Abstractions.Telemetry;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using System.Security.Claims;
 
@@ -28,8 +29,11 @@ public sealed class BearerTokenAuthenticationProviderTests
 
         _telemetryFactory = Substitute.For<ITelemetryActivityFactory>();
 
+        var options = Options.Create(new AuthOptions());
+
         _provider = new BearerTokenAuthenticationProvider(
             _keyProvider,
+            options,
             _telemetryFactory,
             NullLogger<BearerTokenAuthenticationProvider>.Instance);
     }

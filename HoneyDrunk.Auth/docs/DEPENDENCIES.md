@@ -12,7 +12,7 @@
 
 | Dependency | Version | Purpose |
 |------------|---------|---------|
-| HoneyDrunk.Kernel | 0.3.0 | Context, telemetry, lifecycle |
+| HoneyDrunk.Kernel | 0.4.0 | Context, telemetry, lifecycle |
 | HoneyDrunk.Vault | 0.1.0 | Secret management |
 | Microsoft.IdentityModel.JsonWebTokens | 8.3.1 | JWT validation |
 
@@ -20,7 +20,7 @@
 
 | Dependency | Version | Purpose |
 |------------|---------|---------|
-| HoneyDrunk.Kernel | 0.3.0 | Context, telemetry |
+| HoneyDrunk.Kernel | 0.4.0 | Context, telemetry |
 | Microsoft.AspNetCore.App | (framework) | ASP.NET Core integration |
 
 ## Forbidden Dependencies

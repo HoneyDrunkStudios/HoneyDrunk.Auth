@@ -59,7 +59,17 @@ public enum AuthenticationFailureCode
     MissingClaim = 9,
 
     /// <summary>
-    /// An internal error occurred during authentication.
+    /// The authentication configuration is invalid or missing (issuer, audience, keys).
+    /// </summary>
+    ConfigurationError = 10,
+
+    /// <summary>
+    /// The secrets backend (Vault) is unavailable.
+    /// </summary>
+    VaultUnavailable = 11,
+
+    /// <summary>
+    /// An unexpected internal error occurred during authentication.
     /// </summary>
     InternalError = 99,
 }

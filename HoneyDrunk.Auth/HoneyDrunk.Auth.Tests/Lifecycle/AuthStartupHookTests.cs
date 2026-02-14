@@ -158,7 +158,7 @@ public sealed class AuthStartupHookTests
         keyProvider.GetAudienceAsync(Arg.Any<CancellationToken>())
             .Returns("api://test");
         keyProvider.GetSigningKeysAsync(Arg.Any<CancellationToken>())
-            .Returns(new[] { TestTokenGenerator.GenerateKey() });
+            .Returns([TestTokenGenerator.GenerateKey()]);
         var hook = new AuthStartupHook(keyProvider, NullLogger<AuthStartupHook>.Instance);
 
         // Act & Assert
@@ -182,7 +182,7 @@ public sealed class AuthStartupHookTests
         keyProvider.GetAudienceAsync(Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Vault audience error"));
         keyProvider.GetSigningKeysAsync(Arg.Any<CancellationToken>())
-            .Returns(new[] { TestTokenGenerator.GenerateKey() });
+            .Returns([TestTokenGenerator.GenerateKey()]);
         var hook = new AuthStartupHook(keyProvider, NullLogger<AuthStartupHook>.Instance);
 
         // Act & Assert

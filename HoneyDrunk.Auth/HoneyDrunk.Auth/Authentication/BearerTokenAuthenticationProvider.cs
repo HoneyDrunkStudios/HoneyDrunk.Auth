@@ -3,6 +3,7 @@ using HoneyDrunk.Auth.Secrets;
 using HoneyDrunk.Auth.Telemetry;
 using HoneyDrunk.Kernel.Abstractions.Telemetry;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
@@ -15,14 +16,17 @@ namespace HoneyDrunk.Auth.Authentication;
 /// Initializes a new instance of the <see cref="BearerTokenAuthenticationProvider"/> class.
 /// </remarks>
 /// <param name="keyProvider">The signing key provider.</param>
+/// <param name="options">The auth options.</param>
 /// <param name="telemetryFactory">The telemetry activity factory.</param>
 /// <param name="logger">The logger.</param>
 public sealed class BearerTokenAuthenticationProvider(
     ISigningKeyProvider keyProvider,
+    IOptions<AuthOptions> options,
     ITelemetryActivityFactory telemetryFactory,
     ILogger<BearerTokenAuthenticationProvider> logger) : IAuthenticationProvider
 {
     private readonly ISigningKeyProvider _keyProvider = keyProvider ?? throw new ArgumentNullException(nameof(keyProvider));
+    private readonly AuthOptions _options = options?.Value ?? new AuthOptions();
     private readonly ITelemetryActivityFactory _telemetryFactory = telemetryFactory ?? throw new ArgumentNullException(nameof(telemetryFactory));
     private readonly ILogger<BearerTokenAuthenticationProvider> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -53,14 +57,23 @@ public sealed class BearerTokenAuthenticationProvider(
             var validationResult = await ValidateTokenAsync(credential.Value, cancellationToken);
             return validationResult;
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (AuthenticationException ex)
+        {
+            // Rethrow known authentication exceptions with proper codes
+            return RecordFailure(activity, ex.FailureCode, ex.Message);
+        }
+        catch (Exception ex)
         {
             _logger.LogError(ex, "Authentication failed with unexpected error");
-            return RecordFailure(activity, AuthenticationFailureCode.InternalError, "Internal authentication error");
+            return RecordFailure(activity, AuthenticationFailureCode.InternalError, "Unexpected authentication error");
         }
     }
 
-    private static AuthenticatedIdentity CreateIdentityFromToken(TokenValidationResult result)
+    private static Dictionary<string, List<string>> ExtractClaims(TokenValidationResult result)
     {
         var claims = new Dictionary<string, List<string>>();
 
@@ -98,9 +111,14 @@ public sealed class BearerTokenAuthenticationProvider(
             }
         }
 
+        return claims;
+    }
+
+    private static AuthenticatedIdentity CreateIdentityFromClaims(Dictionary<string, List<string>> claims)
+    {
         var subjectId = claims.GetValueOrDefault(AuthClaimTypes.Subject)?.FirstOrDefault()
             ?? claims.GetValueOrDefault(JwtRegisteredClaimNames.Sub)?.FirstOrDefault()
-            ?? throw new InvalidOperationException("Token missing subject claim");
+            ?? throw new InvalidOperationException("Token missing subject claim after validation");
 
         var displayName = claims.GetValueOrDefault(AuthClaimTypes.Name)?.FirstOrDefault()
             ?? claims.GetValueOrDefault(JwtRegisteredClaimNames.Name)?.FirstOrDefault();
@@ -138,22 +156,67 @@ public sealed class BearerTokenAuthenticationProvider(
                 AuthenticationFailureCode.InvalidSignature, "Token validation failed"),
 
             _ => AuthenticationResult.Fail(
-                AuthenticationFailureCode.InvalidSignature, exception.Message),
+                AuthenticationFailureCode.InvalidSignature, "Token validation failed"),
         };
+    }
+
+    private static bool IsSignatureFailure(Exception? exception)
+    {
+        return exception is SecurityTokenInvalidSignatureException
+            or SecurityTokenSignatureKeyNotFoundException;
+    }
+
+    private static string? TryExtractKeyId(string token)
+    {
+        try
+        {
+            var handler = new JsonWebTokenHandler();
+            var jwt = handler.ReadJsonWebToken(token);
+            return string.IsNullOrEmpty(jwt.Kid) ? null : jwt.Kid;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private async Task<AuthenticationResult> ValidateTokenAsync(string token, CancellationToken cancellationToken)
     {
-        var signingKeys = await _keyProvider.GetSigningKeysAsync(cancellationToken);
+        IReadOnlyList<SecurityKey> signingKeys;
+        string issuer;
+        string audience;
+        TimeSpan clockSkew;
+
+        try
+        {
+            signingKeys = await _keyProvider.GetSigningKeysAsync(cancellationToken);
+            issuer = await _keyProvider.GetIssuerAsync(cancellationToken);
+            audience = await _keyProvider.GetAudienceAsync(cancellationToken);
+            clockSkew = await _keyProvider.GetClockSkewAsync(cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "Failed to retrieve authentication configuration from Vault");
+            throw new AuthenticationException(AuthenticationFailureCode.VaultUnavailable, "Authentication service temporarily unavailable");
+        }
+
         if (signingKeys.Count == 0)
         {
             _logger.LogError("No signing keys available for token validation");
-            return AuthenticationResult.Fail(AuthenticationFailureCode.InternalError, "No signing keys available");
+            throw new AuthenticationException(AuthenticationFailureCode.ConfigurationError, "Authentication service is misconfigured");
         }
 
-        var issuer = await _keyProvider.GetIssuerAsync(cancellationToken);
-        var audience = await _keyProvider.GetAudienceAsync(cancellationToken);
-        var clockSkew = await _keyProvider.GetClockSkewAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(issuer))
+        {
+            _logger.LogError("Issuer is not configured");
+            throw new AuthenticationException(AuthenticationFailureCode.ConfigurationError, "Authentication service is misconfigured");
+        }
+
+        if (string.IsNullOrWhiteSpace(audience))
+        {
+            _logger.LogError("Audience is not configured");
+            throw new AuthenticationException(AuthenticationFailureCode.ConfigurationError, "Authentication service is misconfigured");
+        }
 
         var validationParameters = new TokenValidationParameters
         {
@@ -172,13 +235,92 @@ public sealed class BearerTokenAuthenticationProvider(
 
         if (!result.IsValid)
         {
-            return MapValidationException(result.Exception);
+            // If validation failed due to an unknown signing key, attempt a refresh and retry once
+            if (IsSignatureFailure(result.Exception) &&
+                _keyProvider is CachingSigningKeyProvider cachingProvider)
+            {
+                var kid = TryExtractKeyId(token);
+                if (kid is not null && await cachingProvider.TryRefreshForUnknownKeyIdAsync(kid, cancellationToken))
+                {
+                    // Rebuild validation parameters with refreshed keys
+                    var refreshedKeys = await cachingProvider.GetSigningKeysAsync(cancellationToken);
+                    validationParameters.IssuerSigningKeys = refreshedKeys;
+
+                    var retryResult = await handler.ValidateTokenAsync(token, validationParameters);
+                    if (retryResult.IsValid)
+                    {
+                        result = retryResult;
+                    }
+                    else
+                    {
+                        return MapValidationException(retryResult.Exception);
+                    }
+                }
+                else
+                {
+                    return MapValidationException(result.Exception);
+                }
+            }
+            else
+            {
+                return MapValidationException(result.Exception);
+            }
         }
 
-        var identity = CreateIdentityFromToken(result);
-        _logger.LogDebug("Successfully authenticated subject {SubjectId}", identity.SubjectId);
+        // Extract claims
+        var claims = ExtractClaims(result);
+
+        // Validate required claims
+        var missingClaims = ValidateRequiredClaims(claims);
+        if (missingClaims.Count > 0)
+        {
+            return AuthenticationResult.Fail(
+                AuthenticationFailureCode.MissingClaim,
+                $"Required claim(s) missing: {string.Join(", ", missingClaims)}");
+        }
+
+        // Build identity
+        var identity = CreateIdentityFromClaims(claims);
+
+        // Do not log subject IDs at info/warning level to avoid leaking sensitive information
+        _logger.LogDebug("Successfully authenticated identity");
 
         return AuthenticationResult.Success(identity);
+    }
+
+    private List<string> ValidateRequiredClaims(Dictionary<string, List<string>> claims)
+    {
+        var missing = new List<string>();
+
+        // "sub" is always required for identity construction, even if not explicitly configured
+        var hasSubject = claims.ContainsKey(AuthClaimTypes.Subject) ||
+                         claims.ContainsKey(JwtRegisteredClaimNames.Sub);
+        var subAlreadyChecked = false;
+
+        foreach (var requiredClaim in _options.RequiredClaims)
+        {
+            // Check common aliases for 'sub'
+            if (string.Equals(requiredClaim, "sub", StringComparison.OrdinalIgnoreCase))
+            {
+                subAlreadyChecked = true;
+                if (!hasSubject)
+                {
+                    missing.Add(requiredClaim);
+                }
+            }
+            else if (!claims.ContainsKey(requiredClaim))
+            {
+                missing.Add(requiredClaim);
+            }
+        }
+
+        // Enforce "sub" even if the caller removed it from RequiredClaims
+        if (!subAlreadyChecked && !hasSubject)
+        {
+            missing.Add("sub");
+        }
+
+        return missing;
     }
 
     private AuthenticationResult RecordFailure(
@@ -186,7 +328,8 @@ public sealed class BearerTokenAuthenticationProvider(
         AuthenticationFailureCode code,
         string message)
     {
-        _logger.LogWarning("Authentication failed: {FailureCode} - {Message}", code, message);
+        // Log at debug level to avoid leaking sensitive information
+        _logger.LogDebug("Authentication failed: {FailureCode}", code);
 
         if (activity != null)
         {
@@ -195,5 +338,13 @@ public sealed class BearerTokenAuthenticationProvider(
         }
 
         return AuthenticationResult.Fail(code, message);
+    }
+
+    /// <summary>
+    /// Internal exception for propagating authentication failures with proper codes.
+    /// </summary>
+    private sealed class AuthenticationException(AuthenticationFailureCode failureCode, string message) : Exception(message)
+    {
+        public AuthenticationFailureCode FailureCode { get; } = failureCode;
     }
 }

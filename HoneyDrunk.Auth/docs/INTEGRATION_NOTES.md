@@ -1,18 +1,42 @@
 # Integration Notes: HoneyDrunk.Kernel and HoneyDrunk.Vault APIs
 
-This document lists the exact types and methods from HoneyDrunk.Kernel and HoneyDrunk.Vault that Auth integrates with.
+This document lists the exact types and methods from HoneyDrunk.Kernel (v0.4.0) and HoneyDrunk.Vault that Auth integrates with.
 
-## HoneyDrunk.Kernel Integration Points
+## HoneyDrunk.Kernel Integration Points (v0.4.0)
 
 ### Context Access
 
+> **Important (v0.4.0):** GridContext is now created by DI scope and initialized by middleware.
+> Auth **must not** create its own GridContext instances. Always access the ambient context via `IGridContextAccessor`.
+
 | Type | Usage |
 |------|-------|
-| `IGridContextAccessor` | Access ambient Grid context containing correlation IDs, tenant/project identifiers |
-| `IGridContext` | Read `CorrelationId`, `CausationId`, `TenantId`, `ProjectId`, `Baggage` |
+| `IGridContextAccessor` | Access ambient Grid context (read-only in v0.4.0) |
+| `IGridContext` | Read `CorrelationId`, `CausationId`, `TenantId`, `ProjectId`, `IsInitialized`; call `AddBaggage()` |
 | `IOperationContextAccessor` | Access ambient Operation context for current request/operation |
 | `IOperationContext` | Read `OperationName`, `OperationId`, `GridContext`; call `AddMetadata()` |
 | `INodeContext` | Read Node-level identifiers (`NodeId`, `StudioId`, `Environment`) |
+
+### v0.4.0 Breaking Changes
+
+**IGridContextAccessor:**
+- Changed from `IGridContext? GridContext { get; set; }` to `IGridContext GridContext { get; }` (read-only)
+- Accessor reads from `HttpContext.RequestServices`, not independent `AsyncLocal`
+
+**IGridContext:**
+- Removed `BeginScope()` method entirely
+- Removed `WithBaggage()` method - replaced with `AddBaggage()` (void, mutates in place)
+- Added `IsInitialized` property to check initialization state
+- Throws `InvalidOperationException` if accessed before initialization
+- Throws `ObjectDisposedException` if accessed after scope ends
+
+**IGridContextFactory:**
+- Removed `CreateRoot()` method - root contexts are created by DI only
+- `CreateChild()` remains for cross-node propagation scenarios
+
+**Context Mappers (Now Static):**
+- `HttpContextMapper` is now static with `ExtractFromHttpContext()` and `InitializeFromHttpContext()` methods
+- Auth should never call these directly - use `UseGridContext()` middleware
 
 ### Telemetry
 

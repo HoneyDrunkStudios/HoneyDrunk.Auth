@@ -5,6 +5,18 @@ All notable changes to HoneyDrunk.Auth.Abstractions will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-02-14
+
+### Added
+
+- `ConfigurationError` authentication failure code for invalid or missing auth configuration
+- `VaultUnavailable` authentication failure code for Vault backend unavailability
+- `PolicyNotFound` authorization deny code for missing policy lookups
+
+### Changed
+
+- Clarified `InternalError` XML doc as "unexpected internal error"
+
 ## [0.1.0] - 2025-12-12
 
 ### Added

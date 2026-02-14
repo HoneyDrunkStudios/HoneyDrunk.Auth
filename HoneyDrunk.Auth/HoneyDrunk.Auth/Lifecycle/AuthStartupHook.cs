@@ -5,13 +5,16 @@ using Microsoft.Extensions.Logging;
 namespace HoneyDrunk.Auth.Lifecycle;
 
 /// <summary>
-/// Startup hook that validates required Auth secrets are available in Vault.
+/// Startup hook that validates required Auth secrets are available in Vault and preloads the cache.
 /// </summary>
 /// <remarks>
+/// <para>
 /// Implements fail-fast behavior by checking for issuer, audience, and signing keys at startup.
-/// </remarks>
-/// <remarks>
+/// If the key provider is the caching decorator, this will also preload the cache.
+/// </para>
+/// <para>
 /// Initializes a new instance of the <see cref="AuthStartupHook"/> class.
+/// </para>
 /// </remarks>
 /// <param name="keyProvider">The signing key provider.</param>
 /// <param name="logger">The logger.</param>
@@ -28,6 +31,22 @@ public sealed class AuthStartupHook(ISigningKeyProvider keyProvider, ILogger<Aut
     {
         _logger.LogInformation("Validating Auth secrets in Vault...");
 
+        // If using caching provider, preload the cache
+        if (_keyProvider is CachingSigningKeyProvider cachingProvider)
+        {
+            try
+            {
+                await cachingProvider.PreloadAsync(cancellationToken);
+                _logger.LogDebug("Auth cache preloaded successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Auth startup validation failed: unable to load secrets from Vault");
+                throw new InvalidOperationException("Auth startup validation failed: unable to load secrets from Vault", ex);
+            }
+        }
+
+        // Validate configuration values
         var errors = new List<string>();
 
         // Validate issuer
@@ -40,7 +59,7 @@ public sealed class AuthStartupHook(ISigningKeyProvider keyProvider, ILogger<Aut
             }
             else
             {
-                _logger.LogDebug("Validated auth:issuer = {Issuer}", issuer);
+                _logger.LogDebug("Validated auth:issuer");
             }
         }
         catch (Exception ex)
@@ -58,7 +77,7 @@ public sealed class AuthStartupHook(ISigningKeyProvider keyProvider, ILogger<Aut
             }
             else
             {
-                _logger.LogDebug("Validated auth:audience = {Audience}", audience);
+                _logger.LogDebug("Validated auth:audience");
             }
         }
         catch (Exception ex)

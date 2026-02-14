@@ -9,10 +9,10 @@
 
     <!-- Package Metadata -->
     <PackageId>HoneyDrunk.Auth.AspNetCore</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>ASP.NET Core integration for HoneyDrunk.Auth. Provides middleware for JWT Bearer token authentication, HttpContext identity accessors, and seamless integration with ASP.NET Core's authentication pipeline.</Description>
-    <PackageReleaseNotes>v0.1.0: Initial release with ASP.NET Core middleware and HttpContext integration.</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.2.0: Updated HoneyDrunk.Kernel to 0.4.0 for scope-based GridContext support. Fixed XML doc cref on AddHoneyDrunkAuthAspNetCore.</PackageReleaseNotes>
     <PackageTags>authentication;authorization;jwt;bearer;aspnetcore;middleware;security;identity</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -34,7 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HoneyDrunk.Kernel" Version="0.3.0" />
+    <PackageReference Include="HoneyDrunk.Kernel" Version="0.4.0" />
     <PackageReference Include="HoneyDrunk.Standards" Version="0.2.6">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -47,7 +47,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.101" />
+    <PackageReference Update="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.102" />
   </ItemGroup>
 
   <ItemGroup>

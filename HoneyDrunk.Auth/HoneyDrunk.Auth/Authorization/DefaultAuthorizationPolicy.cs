@@ -6,10 +6,18 @@ using Microsoft.Extensions.Logging;
 namespace HoneyDrunk.Auth.Authorization;
 
 /// <summary>
-/// Default authorization policy implementation that evaluates scopes, roles, and ownership.
+/// Default authorization policy implementation that wraps pure evaluation with telemetry.
 /// </summary>
 /// <remarks>
+/// <para>
+/// This class delegates to <see cref="AuthorizationPolicyEvaluator"/> for the actual
+/// policy evaluation via its static <see cref="AuthorizationPolicyEvaluator.Evaluate"/> method,
+/// which is pure and side-effect free. This wrapper adds telemetry
+/// and logging as cross-cutting concerns.
+/// </para>
+/// <para>
 /// Initializes a new instance of the <see cref="DefaultAuthorizationPolicy"/> class.
+/// </para>
 /// </remarks>
 /// <param name="telemetryFactory">The telemetry activity factory.</param>
 /// <param name="logger">The logger.</param>
@@ -31,6 +39,7 @@ public sealed class DefaultAuthorizationPolicy(
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        // Start telemetry span
         using var activity = _telemetryFactory.Start(
             AuthTelemetry.AuthorizeActivityName,
             new Dictionary<string, object?>
@@ -38,111 +47,48 @@ public sealed class DefaultAuthorizationPolicy(
                 [AuthTelemetry.Tags.Policy] = PolicyName,
             });
 
-        var denyReasons = new List<DenyReason>();
-        var satisfiedRequirements = new List<string>();
+        // Delegate to pure evaluator
+        var decision = AuthorizationPolicyEvaluator.Evaluate(identity, request);
 
-        // Check authentication
-        if (identity is null)
-        {
-            return Task.FromResult(RecordDecision(
-                activity,
-                AuthorizationDecision.Deny(AuthorizationDenyCode.NotAuthenticated, "Request is not authenticated")));
-        }
+        // Record telemetry and logging (side effects isolated here)
+        RecordTelemetry(activity, decision);
+        LogDecision(request, decision);
 
-        satisfiedRequirements.Add("authenticated");
-
-        // Check required scopes
-        foreach (var requiredScope in request.RequiredScopes)
-        {
-            if (identity.HasClaim(AuthClaimTypes.Scope, requiredScope))
-            {
-                satisfiedRequirements.Add($"scope:{requiredScope}");
-            }
-            else
-            {
-                denyReasons.Add(new DenyReason(
-                    AuthorizationDenyCode.MissingScope,
-                    $"Required scope '{requiredScope}' is missing"));
-            }
-        }
-
-        // Check required roles (any role is sufficient)
-        if (request.RequiredRoles.Count > 0)
-        {
-            var hasAnyRole = false;
-            foreach (var requiredRole in request.RequiredRoles)
-            {
-                if (identity.HasClaim(AuthClaimTypes.Role, requiredRole))
-                {
-                    satisfiedRequirements.Add($"role:{requiredRole}");
-                    hasAnyRole = true;
-                    break;
-                }
-            }
-
-            if (!hasAnyRole)
-            {
-                denyReasons.Add(new DenyReason(
-                    AuthorizationDenyCode.MissingRole,
-                    $"None of the required roles [{string.Join(", ", request.RequiredRoles)}] are present"));
-            }
-        }
-
-        // Check resource ownership
-        if (!string.IsNullOrEmpty(request.ResourceOwnerId))
-        {
-            if (string.Equals(identity.SubjectId, request.ResourceOwnerId, StringComparison.Ordinal))
-            {
-                satisfiedRequirements.Add("owner");
-            }
-            else
-            {
-                denyReasons.Add(new DenyReason(
-                    AuthorizationDenyCode.ResourceOwnershipDenied,
-                    "Identity does not own the requested resource"));
-            }
-        }
-
-        // Return decision
-        if (denyReasons.Count > 0)
-        {
-            _logger.LogWarning(
-                "Authorization denied for subject {SubjectId} on {Action} {Resource}: {Reasons}",
-                identity.SubjectId,
-                request.Action,
-                request.Resource,
-                string.Join("; ", denyReasons.Select(r => r.Message)));
-
-            return Task.FromResult(RecordDecision(
-                activity,
-                AuthorizationDecision.Deny(denyReasons, satisfiedRequirements)));
-        }
-
-        _logger.LogDebug(
-            "Authorization allowed for subject {SubjectId} on {Action} {Resource}",
-            identity.SubjectId,
-            request.Action,
-            request.Resource);
-
-        return Task.FromResult(RecordDecision(
-            activity,
-            AuthorizationDecision.Allow(satisfiedRequirements)));
+        return Task.FromResult(decision);
     }
 
-    private static AuthorizationDecision RecordDecision(
-        System.Diagnostics.Activity? activity,
-        AuthorizationDecision decision)
+    private static void RecordTelemetry(System.Diagnostics.Activity? activity, AuthorizationDecision decision)
     {
-        if (activity != null)
+        if (activity is null)
         {
-            activity.SetTag(AuthTelemetry.Tags.AuthzResult, decision.IsAllowed ? AuthTelemetry.ResultAllow : AuthTelemetry.ResultDeny);
-
-            if (!decision.IsAllowed && decision.DenyReasons.Count > 0)
-            {
-                activity.SetTag(AuthTelemetry.Tags.AuthzFailureCode, decision.DenyReasons[0].Code.ToString());
-            }
+            return;
         }
 
-        return decision;
+        activity.SetTag(AuthTelemetry.Tags.AuthzResult, decision.IsAllowed ? AuthTelemetry.ResultAllow : AuthTelemetry.ResultDeny);
+
+        if (!decision.IsAllowed && decision.DenyReasons.Count > 0)
+        {
+            activity.SetTag(AuthTelemetry.Tags.AuthzFailureCode, decision.DenyReasons[0].Code.ToString());
+        }
+    }
+
+    private void LogDecision(AuthorizationRequest request, AuthorizationDecision decision)
+    {
+        if (decision.IsAllowed)
+        {
+            _logger.LogDebug(
+                "Authorization allowed on {Action} {Resource}",
+                request.Action,
+                request.Resource);
+        }
+        else
+        {
+            // Do not log subject IDs in warnings to avoid leaking sensitive information
+            _logger.LogDebug(
+                "Authorization denied on {Action} {Resource}: {Reasons}",
+                request.Action,
+                request.Resource,
+                string.Join("; ", decision.DenyReasons.Select(r => r.Message)));
+        }
     }
 }
