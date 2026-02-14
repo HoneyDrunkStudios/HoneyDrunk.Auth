@@ -42,7 +42,7 @@ public sealed class AuthStartupHook(ISigningKeyProvider keyProvider, ILogger<Aut
             catch (Exception ex)
             {
                 _logger.LogCritical(ex, "Auth startup validation failed: unable to load secrets from Vault");
-                throw new InvalidOperationException($"Auth startup validation failed: {ex.Message}", ex);
+                throw new InvalidOperationException("Auth startup validation failed: unable to load secrets from Vault", ex);
             }
         }
 

@@ -118,7 +118,7 @@ public sealed class BearerTokenAuthenticationProvider(
     {
         var subjectId = claims.GetValueOrDefault(AuthClaimTypes.Subject)?.FirstOrDefault()
             ?? claims.GetValueOrDefault(JwtRegisteredClaimNames.Sub)?.FirstOrDefault()
-            ?? string.Empty; // Should not happen if RequiredClaims includes "sub"
+            ?? throw new InvalidOperationException("Token missing subject claim after validation");
 
         var displayName = claims.GetValueOrDefault(AuthClaimTypes.Name)?.FirstOrDefault()
             ?? claims.GetValueOrDefault(JwtRegisteredClaimNames.Name)?.FirstOrDefault();
@@ -158,6 +158,26 @@ public sealed class BearerTokenAuthenticationProvider(
             _ => AuthenticationResult.Fail(
                 AuthenticationFailureCode.InvalidSignature, "Token validation failed"),
         };
+    }
+
+    private static bool IsSignatureFailure(Exception? exception)
+    {
+        return exception is SecurityTokenInvalidSignatureException
+            or SecurityTokenSignatureKeyNotFoundException;
+    }
+
+    private static string? TryExtractKeyId(string token)
+    {
+        try
+        {
+            var handler = new JsonWebTokenHandler();
+            var jwt = handler.ReadJsonWebToken(token);
+            return string.IsNullOrEmpty(jwt.Kid) ? null : jwt.Kid;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private async Task<AuthenticationResult> ValidateTokenAsync(string token, CancellationToken cancellationToken)
@@ -215,7 +235,36 @@ public sealed class BearerTokenAuthenticationProvider(
 
         if (!result.IsValid)
         {
-            return MapValidationException(result.Exception);
+            // If validation failed due to an unknown signing key, attempt a refresh and retry once
+            if (IsSignatureFailure(result.Exception) &&
+                _keyProvider is CachingSigningKeyProvider cachingProvider)
+            {
+                var kid = TryExtractKeyId(token);
+                if (kid is not null && await cachingProvider.TryRefreshForUnknownKeyIdAsync(kid, cancellationToken))
+                {
+                    // Rebuild validation parameters with refreshed keys
+                    var refreshedKeys = await cachingProvider.GetSigningKeysAsync(cancellationToken);
+                    validationParameters.IssuerSigningKeys = refreshedKeys;
+
+                    var retryResult = await handler.ValidateTokenAsync(token, validationParameters);
+                    if (retryResult.IsValid)
+                    {
+                        result = retryResult;
+                    }
+                    else
+                    {
+                        return MapValidationException(retryResult.Exception);
+                    }
+                }
+                else
+                {
+                    return MapValidationException(result.Exception);
+                }
+            }
+            else
+            {
+                return MapValidationException(result.Exception);
+            }
         }
 
         // Extract claims
@@ -243,13 +292,17 @@ public sealed class BearerTokenAuthenticationProvider(
     {
         var missing = new List<string>();
 
+        // "sub" is always required for identity construction, even if not explicitly configured
+        var hasSubject = claims.ContainsKey(AuthClaimTypes.Subject) ||
+                         claims.ContainsKey(JwtRegisteredClaimNames.Sub);
+        var subAlreadyChecked = false;
+
         foreach (var requiredClaim in _options.RequiredClaims)
         {
             // Check common aliases for 'sub'
             if (string.Equals(requiredClaim, "sub", StringComparison.OrdinalIgnoreCase))
             {
-                var hasSubject = claims.ContainsKey(AuthClaimTypes.Subject) ||
-                                 claims.ContainsKey(JwtRegisteredClaimNames.Sub);
+                subAlreadyChecked = true;
                 if (!hasSubject)
                 {
                     missing.Add(requiredClaim);
@@ -259,6 +312,12 @@ public sealed class BearerTokenAuthenticationProvider(
             {
                 missing.Add(requiredClaim);
             }
+        }
+
+        // Enforce "sub" even if the caller removed it from RequiredClaims
+        if (!subAlreadyChecked && !hasSubject)
+        {
+            missing.Add("sub");
         }
 
         return missing;
@@ -284,14 +343,8 @@ public sealed class BearerTokenAuthenticationProvider(
     /// <summary>
     /// Internal exception for propagating authentication failures with proper codes.
     /// </summary>
-    private sealed class AuthenticationException : Exception
+    private sealed class AuthenticationException(AuthenticationFailureCode failureCode, string message) : Exception(message)
     {
-        public AuthenticationException(AuthenticationFailureCode failureCode, string message)
-            : base(message)
-        {
-            FailureCode = failureCode;
-        }
-
-        public AuthenticationFailureCode FailureCode { get; }
+        public AuthenticationFailureCode FailureCode { get; } = failureCode;
     }
 }

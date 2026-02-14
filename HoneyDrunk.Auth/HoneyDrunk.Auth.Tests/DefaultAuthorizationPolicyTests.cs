@@ -19,9 +19,7 @@ public sealed class DefaultAuthorizationPolicyTests
     public DefaultAuthorizationPolicyTests()
     {
         var telemetryFactory = Substitute.For<ITelemetryActivityFactory>();
-        var evaluator = new AuthorizationPolicyEvaluator();
         _policy = new DefaultAuthorizationPolicy(
-            evaluator,
             telemetryFactory,
             NullLogger<DefaultAuthorizationPolicy>.Instance);
     }

@@ -18,7 +18,7 @@ public sealed class AuthorizationPolicyEvaluator
     /// <param name="identity">The authenticated identity (or null if not authenticated).</param>
     /// <param name="request">The authorization request.</param>
     /// <returns>The authorization decision.</returns>
-    public AuthorizationDecision Evaluate(AuthenticatedIdentity? identity, AuthorizationRequest request)
+    public static AuthorizationDecision Evaluate(AuthenticatedIdentity? identity, AuthorizationRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 

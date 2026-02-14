@@ -20,7 +20,7 @@ internal static class ExitCodes
 
     // Caching failures (40-49)
     public const int CacheLastKnownGoodFailed = 40;
-    public const int CacheTtlExpiryWrongCode = 41;
+    public const int CacheTtlExpiryLkgOrVaultUnavailableFailed = 41;
 
     // Unknown kid failures (50-59)
     public const int UnknownKidRefreshFailed = 50;

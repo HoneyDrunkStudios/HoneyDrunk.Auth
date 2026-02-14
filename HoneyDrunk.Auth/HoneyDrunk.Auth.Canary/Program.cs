@@ -15,7 +15,7 @@
 //   30 = MissingClaim code not returned for missing custom claim
 //   31 = MissingClaim code not returned for missing sub
 //   40 = Cache last-known-good fallback failed
-//   41 = VaultUnavailable code not returned after TTL expiry
+//   41 = TTL expiry + Vault down: expected LKG success or VaultUnavailable
 //   50 = Unknown kid refresh failed
 //   51 = Unknown kid with vault down did not return VaultUnavailable
 //   60 = PolicyNotFound indistinguishable from generic Deny
@@ -345,7 +345,7 @@ static async Task<int> Check6_TtlExpiryVaultDownReturnsVaultUnavailable()
     if (!warmResult.IsAuthenticated)
     {
         Console.WriteLine($"FAIL {name}: Warmup failed: {warmResult.FailureCode}");
-        return ExitCodes.CacheTtlExpiryWrongCode;
+        return ExitCodes.CacheTtlExpiryLkgOrVaultUnavailableFailed;
     }
 
     // Wait for TTL to expire
@@ -374,7 +374,7 @@ static async Task<int> Check6_TtlExpiryVaultDownReturnsVaultUnavailable()
         }
 
         Console.WriteLine($"FAIL {name}: Expected success from LKG or VaultUnavailable but got {result.FailureCode}");
-        return ExitCodes.CacheTtlExpiryWrongCode;
+        return ExitCodes.CacheTtlExpiryLkgOrVaultUnavailableFailed;
     }
 
     Console.WriteLine($"PASS {name} (LKG fallback worked)");
@@ -424,21 +424,14 @@ static async Task<int> Check7_UnknownKidRefreshBehavior()
 
     // The unknown kid should trigger a refresh attempt
     // After refresh, the rotated key should be found and auth should succeed
-    // OR it might fail with InvalidSignature if refresh isn't implemented
+    // OR it might fail if unknown kid refresh is not working correctly
     if (!refreshResult.IsAuthenticated)
     {
         // Check if a refresh was attempted
         var refreshCallCount = toggleableProvider.GetKeysCallCount;
         Console.WriteLine($"INFO {name}: Auth failed, inner provider was called {refreshCallCount} times");
 
-        if (refreshResult.FailureCode == AuthenticationFailureCode.InvalidSignature)
-        {
-            // This is acceptable - unknown kid refresh might not be fully implemented
-            Console.WriteLine($"PASS {name} (InvalidSignature - refresh may not be wired yet)");
-            return ExitCodes.Success;
-        }
-
-        Console.WriteLine($"FAIL {name}: Expected success or InvalidSignature but got {refreshResult.FailureCode}");
+        Console.WriteLine($"FAIL {name}: Expected authentication success after unknown kid refresh but got {refreshResult.FailureCode}");
         return ExitCodes.UnknownKidRefreshFailed;
     }
 
@@ -507,14 +500,11 @@ static Task<int> Check9_PurityBoundary()
 {
     const string name = "Purity boundary (evaluator has no side effects)";
 
-    // Create a pure evaluator instance
-    var evaluator = new AuthorizationPolicyEvaluator();
-
     // Create a test identity
     var claims = new Dictionary<string, IReadOnlyList<string>>
     {
-        ["sub"] = new[] { "purity-user" },
-        ["scope"] = new[] { "read", "write" },
+        ["sub"] = ["purity-user"],
+        ["scope"] = ["read", "write"],
     };
     var identity = new AuthenticatedIdentity("purity-user", AuthScheme.Bearer, "Purity Test", claims);
 
@@ -524,7 +514,7 @@ static Task<int> Check9_PurityBoundary()
     // The evaluator should work without any telemetry or logging infrastructure
     try
     {
-        var decision = evaluator.Evaluate(identity, request);
+        var decision = AuthorizationPolicyEvaluator.Evaluate(identity, request);
 
         if (!decision.IsAllowed)
         {
@@ -533,7 +523,7 @@ static Task<int> Check9_PurityBoundary()
         }
 
         // Test null identity (should return NotAuthenticated, not throw)
-        var nullDecision = evaluator.Evaluate(null, request);
+        var nullDecision = AuthorizationPolicyEvaluator.Evaluate(null, request);
         if (nullDecision.IsAllowed)
         {
             Console.WriteLine($"FAIL {name}: Expected Deny for null identity but got Allow");
@@ -622,14 +612,12 @@ static (ServiceCollection services, ToggleableSigningKeyProvider innerProvider) 
         return new BearerTokenAuthenticationProvider(keyProv, opts, telemetry, logger);
     });
 
-    // Register authorization evaluator and policy
-    services.AddSingleton<AuthorizationPolicyEvaluator>();
+    // Register authorization policy (delegates to static AuthorizationPolicyEvaluator.Evaluate)
     services.AddSingleton<IAuthorizationPolicy>(sp =>
     {
-        var evaluator = sp.GetRequiredService<AuthorizationPolicyEvaluator>();
         var telemetry = sp.GetRequiredService<ITelemetryActivityFactory>();
         var logger = sp.GetRequiredService<ILogger<DefaultAuthorizationPolicy>>();
-        return new DefaultAuthorizationPolicy(evaluator, telemetry, logger);
+        return new DefaultAuthorizationPolicy(telemetry, logger);
     });
 
     return (services, innerProvider);

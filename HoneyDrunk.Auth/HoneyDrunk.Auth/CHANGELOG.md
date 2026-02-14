@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `AuthOptions` with configurable `RequiredClaims` and `SigningKeyCacheDuration`
+- `AuthOptions` with configurable `RequiredClaims` and `CacheTtl` for signing-key cache duration
 - `AddHoneyDrunkAuth(Action<AuthOptions>)` overload for custom options configuration
 - `CachingSigningKeyProvider` decorator with automatic cache preloading at startup
 - `AuthorizationPolicyEvaluator` for pure, side-effect-free policy evaluation

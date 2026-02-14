@@ -81,8 +81,7 @@ public static class HoneyDrunkAuthServiceCollectionExtensions
         // Authentication
         services.TryAddSingleton<IAuthenticationProvider, BearerTokenAuthenticationProvider>();
 
-        // Authorization - pure evaluator wrapped with telemetry
-        services.TryAddSingleton<AuthorizationPolicyEvaluator>();
+        // Authorization - delegates to static AuthorizationPolicyEvaluator.Evaluate, wrapped with telemetry
         services.TryAddSingleton<IAuthorizationPolicy, DefaultAuthorizationPolicy>();
 
         // Lifecycle

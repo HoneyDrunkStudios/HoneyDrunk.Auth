@@ -7,35 +7,20 @@ namespace HoneyDrunk.Auth.Canary.Fakes;
 /// Toggleable signing key provider for canary testing.
 /// Sits underneath CachingSigningKeyProvider to test cache semantics.
 /// </summary>
-internal sealed class ToggleableSigningKeyProvider : ISigningKeyProvider
+internal sealed class ToggleableSigningKeyProvider(
+    string issuer = "https://canary.honeydrunk.io",
+    string audience = "api://canary",
+    TimeSpan? clockSkew = null) : ISigningKeyProvider
 {
     private readonly List<SecurityKey> _keys = [];
-    private readonly string _issuer;
-    private readonly string _audience;
-    private readonly TimeSpan _clockSkew;
-
-    private bool _isAvailable = true;
+    private readonly TimeSpan _clockSkew = clockSkew ?? TimeSpan.FromMinutes(5);
     private int _getKeysCallCount;
-
-    public ToggleableSigningKeyProvider(
-        string issuer = "https://canary.honeydrunk.io",
-        string audience = "api://canary",
-        TimeSpan? clockSkew = null)
-    {
-        _issuer = issuer;
-        _audience = audience;
-        _clockSkew = clockSkew ?? TimeSpan.FromMinutes(5);
-    }
 
     /// <summary>
     /// Gets or sets a value indicating whether the provider is available.
     /// When false, all operations throw to simulate Vault unavailability.
     /// </summary>
-    public bool IsAvailable
-    {
-        get => _isAvailable;
-        set => _isAvailable = value;
-    }
+    public bool IsAvailable { get; set; } = true;
 
     /// <summary>
     /// Gets the number of times GetSigningKeysAsync was called.
@@ -77,40 +62,40 @@ internal sealed class ToggleableSigningKeyProvider : ISigningKeyProvider
     {
         Interlocked.Increment(ref _getKeysCallCount);
 
-        if (!_isAvailable)
+        if (!IsAvailable)
         {
             throw new InvalidOperationException("Vault unavailable (simulated)");
         }
 
-        return Task.FromResult<IReadOnlyList<SecurityKey>>(_keys.ToList());
+        return Task.FromResult<IReadOnlyList<SecurityKey>>([.. _keys]);
     }
 
     /// <inheritdoc />
     public Task<string> GetIssuerAsync(CancellationToken cancellationToken = default)
     {
-        if (!_isAvailable)
+        if (!IsAvailable)
         {
             throw new InvalidOperationException("Vault unavailable (simulated)");
         }
 
-        return Task.FromResult(_issuer);
+        return Task.FromResult(issuer);
     }
 
     /// <inheritdoc />
     public Task<string> GetAudienceAsync(CancellationToken cancellationToken = default)
     {
-        if (!_isAvailable)
+        if (!IsAvailable)
         {
             throw new InvalidOperationException("Vault unavailable (simulated)");
         }
 
-        return Task.FromResult(_audience);
+        return Task.FromResult(audience);
     }
 
     /// <inheritdoc />
     public Task<TimeSpan> GetClockSkewAsync(CancellationToken cancellationToken = default)
     {
-        if (!_isAvailable)
+        if (!IsAvailable)
         {
             throw new InvalidOperationException("Vault unavailable (simulated)");
         }

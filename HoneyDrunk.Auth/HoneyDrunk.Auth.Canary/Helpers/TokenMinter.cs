@@ -68,13 +68,18 @@ internal static class TokenMinter
 
     /// <summary>
     /// Mints a token with 'sub' but missing a specified custom required claim.
+    /// The <paramref name="missingClaimName"/> parameter documents which claim is
+    /// intentionally omitted but is not referenced in the body because the method
+    /// simply does not add it.
     /// </summary>
+#pragma warning disable IDE0060 // Unused parameter documents the omitted claim
     public static string MintMissingClaim(
         SymmetricSecurityKey key,
         string missingClaimName,
         string subject = "user-123",
         string issuer = DefaultIssuer,
         string audience = DefaultAudience)
+#pragma warning restore IDE0060
     {
         // Include sub but deliberately omit the specified claim
         var claims = new List<Claim> { new(JwtRegisteredClaimNames.Sub, subject) };

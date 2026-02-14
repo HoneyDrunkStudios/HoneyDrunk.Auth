@@ -11,22 +11,20 @@ namespace HoneyDrunk.Auth.Authorization;
 /// <remarks>
 /// <para>
 /// This class delegates to <see cref="AuthorizationPolicyEvaluator"/> for the actual
-/// policy evaluation, which is pure and side-effect free. This wrapper adds telemetry
+/// policy evaluation via its static <see cref="AuthorizationPolicyEvaluator.Evaluate"/> method,
+/// which is pure and side-effect free. This wrapper adds telemetry
 /// and logging as cross-cutting concerns.
 /// </para>
 /// <para>
 /// Initializes a new instance of the <see cref="DefaultAuthorizationPolicy"/> class.
 /// </para>
 /// </remarks>
-/// <param name="evaluator">The pure policy evaluator.</param>
 /// <param name="telemetryFactory">The telemetry activity factory.</param>
 /// <param name="logger">The logger.</param>
 public sealed class DefaultAuthorizationPolicy(
-    AuthorizationPolicyEvaluator evaluator,
     ITelemetryActivityFactory telemetryFactory,
     ILogger<DefaultAuthorizationPolicy> logger) : IAuthorizationPolicy
 {
-    private readonly AuthorizationPolicyEvaluator _evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
     private readonly ITelemetryActivityFactory _telemetryFactory = telemetryFactory ?? throw new ArgumentNullException(nameof(telemetryFactory));
     private readonly ILogger<DefaultAuthorizationPolicy> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -50,11 +48,11 @@ public sealed class DefaultAuthorizationPolicy(
             });
 
         // Delegate to pure evaluator
-        var decision = _evaluator.Evaluate(identity, request);
+        var decision = AuthorizationPolicyEvaluator.Evaluate(identity, request);
 
         // Record telemetry and logging (side effects isolated here)
         RecordTelemetry(activity, decision);
-        LogDecision(identity, request, decision);
+        LogDecision(request, decision);
 
         return Task.FromResult(decision);
     }
@@ -74,7 +72,7 @@ public sealed class DefaultAuthorizationPolicy(
         }
     }
 
-    private void LogDecision(AuthenticatedIdentity? identity, AuthorizationRequest request, AuthorizationDecision decision)
+    private void LogDecision(AuthorizationRequest request, AuthorizationDecision decision)
     {
         if (decision.IsAllowed)
         {

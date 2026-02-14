@@ -20,7 +20,7 @@ internal sealed class CachingSigningKeyProvider : ISigningKeyProvider
     private readonly ILogger<CachingSigningKeyProvider> _logger;
     private readonly TimeSpan _ttl;
     private readonly bool _refreshOnUnknownKid;
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
 
     private volatile CacheEntry<IReadOnlyList<SecurityKey>>? _keysCache;
     private volatile CacheEntry<string>? _issuerCache;
@@ -38,6 +38,15 @@ internal sealed class CachingSigningKeyProvider : ISigningKeyProvider
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         var opts = options?.Value ?? new AuthOptions();
+
+        if (opts.CacheTtl <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(options),
+                opts.CacheTtl,
+                "CacheTtl must be a positive duration. Configure AuthOptions.CacheTtl to a value greater than zero.");
+        }
+
         _ttl = opts.CacheTtl;
         _refreshOnUnknownKid = opts.RefreshOnUnknownKeyId;
     }
@@ -235,17 +244,11 @@ internal sealed class CachingSigningKeyProvider : ISigningKeyProvider
         }
     }
 
-    private sealed class CacheEntry<T>
+    private sealed class CacheEntry<T>(T value, TimeSpan ttl)
     {
-        private readonly DateTimeOffset _expiresAt;
+        private readonly DateTimeOffset _expiresAt = DateTimeOffset.UtcNow.Add(ttl);
 
-        public CacheEntry(T value, TimeSpan ttl)
-        {
-            Value = value;
-            _expiresAt = DateTimeOffset.UtcNow.Add(ttl);
-        }
-
-        public T Value { get; }
+        public T Value { get; } = value;
 
         public bool IsExpired => DateTimeOffset.UtcNow >= _expiresAt;
     }
