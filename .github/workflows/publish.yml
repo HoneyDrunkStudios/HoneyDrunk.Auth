@@ -43,6 +43,11 @@ jobs:
   release:
     name: Build, Pack & Publish
     needs: prepare
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      security-events: write
     uses: HoneyDrunkStudios/HoneyDrunk.Actions/.github/workflows/release.yml@main
     with:
       dotnet-version: '10.0.x'
@@ -65,59 +70,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout Actions
+        uses: actions/checkout@v4
+        with:
+          repository: HoneyDrunkStudios/HoneyDrunk.Actions
+          ref: main
+          path: .actions
+
+      - name: Generate Release Notes
+        id: notes
+        uses: ./.actions/.github/actions/release/generate-notes
+        with:
+          version: ${{ needs.prepare.outputs.version }}
+          product-name: HoneyDrunk.Auth
+          product-description: 'Authentication and authorization library for .NET with JWT validation and policy-based authorization.'
+          nuget-packages: |
+            HoneyDrunk.Auth.Abstractions
+            HoneyDrunk.Auth
+            HoneyDrunk.Auth.AspNetCore
+          docs-url: 'https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth#readme'
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prepare.outputs.version-tag }}
           name: HoneyDrunk.Auth ${{ needs.prepare.outputs.version-tag }}
-          body: |
-            ## HoneyDrunk.Auth ${{ needs.prepare.outputs.version-tag }}
-
-            Authentication and authorization library for .NET with JWT validation and policy-based authorization.
-
-            ### 📦 Packages
-
-            **HoneyDrunk.Auth.Abstractions** - Core abstractions and contracts
-
-            ```xml
-            <PackageReference Include="HoneyDrunk.Auth.Abstractions" Version="${{ needs.prepare.outputs.version }}" />
-            ```
-
-            **HoneyDrunk.Auth** - JWT authentication and authorization implementation
-
-            ```xml
-            <PackageReference Include="HoneyDrunk.Auth" Version="${{ needs.prepare.outputs.version }}" />
-            ```
-
-            **HoneyDrunk.Auth.AspNetCore** - ASP.NET Core integration middleware
-
-            ```xml
-            <PackageReference Include="HoneyDrunk.Auth.AspNetCore" Version="${{ needs.prepare.outputs.version }}" />
-            ```
-
-            ### 🔗 Links
-            - [NuGet: HoneyDrunk.Auth.Abstractions](https://www.nuget.org/packages/HoneyDrunk.Auth.Abstractions/${{ needs.prepare.outputs.version }})
-            - [NuGet: HoneyDrunk.Auth](https://www.nuget.org/packages/HoneyDrunk.Auth/${{ needs.prepare.outputs.version }})
-            - [NuGet: HoneyDrunk.Auth.AspNetCore](https://www.nuget.org/packages/HoneyDrunk.Auth.AspNetCore/${{ needs.prepare.outputs.version }})
-            - [Documentation](https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth#readme)
-
-            ### 🚀 Quick Start
-
-            ```csharp
-            using HoneyDrunk.Auth.AspNetCore.Middleware;
-
-            var builder = WebApplication.CreateBuilder(args);
-
-            // Register auth services
-            builder.Services.AddSingleton<IAuthenticationProvider, BearerTokenAuthenticationProvider>();
-            builder.Services.AddSingleton<IAuthorizationPolicy, DefaultAuthorizationPolicy>();
-
-            var app = builder.Build();
-
-            // Add authentication middleware
-            app.UseMiddleware<HoneyDrunkAuthMiddleware>();
-
-            app.Run();
-            ```
+          body: ${{ steps.notes.outputs.body }}
+          generate_release_notes: ${{ steps.notes.outputs.has-changelog == 'false' }}
           draft: false
           prerelease: false
