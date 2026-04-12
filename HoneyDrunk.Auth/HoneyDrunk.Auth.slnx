@@ -16,7 +16,7 @@
   </Folder>
   <Folder Name="/Pipelines/">
     <File Path="../.github/workflows/publish.yml" />
-    <File Path="../.github/workflows/validate-pr.yml" />
+    <File Path="../.github/workflows/pr.yml" />
   </Folder>
   <Project Path="HoneyDrunk.Auth.Abstractions/HoneyDrunk.Auth.Abstractions.csproj" />
   <Project Path="HoneyDrunk.Auth.AspNetCore/HoneyDrunk.Auth.AspNetCore.csproj" />
