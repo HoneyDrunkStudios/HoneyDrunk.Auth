@@ -25,8 +25,8 @@ public sealed class AuthorizationRequest
 
         Action = action;
         Resource = resource;
-        RequiredScopes = requiredScopes?.ToList().AsReadOnly() ?? (IReadOnlyList<string>)[];
-        RequiredRoles = requiredRoles?.ToList().AsReadOnly() ?? (IReadOnlyList<string>)[];
+        RequiredScopes = requiredScopes?.ToList().AsReadOnly() ?? [];
+        RequiredRoles = requiredRoles?.ToList().AsReadOnly() ?? [];
         ResourceOwnerId = resourceOwnerId;
     }
 

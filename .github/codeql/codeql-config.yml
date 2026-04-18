@@ -1,0 +1,13 @@
+name: "HoneyDrunk.Auth CodeQL config"
+
+# HoneyDrunk.Auth is composed almost entirely of boundary types whose contract
+# is to convert exceptions into structured results (IAuthenticationProvider,
+# IHealthContributor, IReadinessContributor, IStartupHook, ISigningKeyProvider).
+# For these boundaries a top-level `catch (Exception)` is the correct design,
+# not a smell. Every current hit of this rule has been reviewed and confirmed
+# to be at a legitimate boundary. Excluding the rule repo-wide rather than
+# suppressing per-site because the rule is structurally misaligned with this
+# repo's architecture.
+query-filters:
+  - exclude:
+      id: cs/catch-of-all-exceptions

@@ -310,7 +310,7 @@ public class DevelopmentSigningKeyProvider : ISigningKeyProvider
 {
     // WARNING: Local development only - never use in production
     private readonly SymmetricSecurityKey _devKey = new(
-        Encoding.UTF8.GetBytes("development-signing-key-at-least-32-bytes!"));
+        Encoding.UTF8.GetBytes("REPLACE-WITH-YOUR-DEV-KEY-32-BYTES-MINIMUM"));
     
     public Task<IReadOnlyList<SecurityKey>> GetSigningKeysAsync(CancellationToken ct)
         => Task.FromResult<IReadOnlyList<SecurityKey>>([_devKey]);
