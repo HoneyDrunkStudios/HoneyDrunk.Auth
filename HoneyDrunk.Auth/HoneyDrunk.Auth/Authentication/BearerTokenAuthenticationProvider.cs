@@ -88,11 +88,7 @@ public sealed class BearerTokenAuthenticationProvider(
             // Handle claims that are arrays (multiple values for same key)
             if (claim.Value is IEnumerable<object> arrayValue)
             {
-                foreach (var item in arrayValue)
-                {
-                    var itemValue = item?.ToString() ?? string.Empty;
-                    values.Add(itemValue);
-                }
+                values.AddRange(arrayValue.Select(item => item?.ToString() ?? string.Empty));
             }
             else
             {

@@ -37,7 +37,7 @@ public sealed class AuthorizationDecision
     /// <returns>An allowed authorization decision.</returns>
     public static AuthorizationDecision Allow(IEnumerable<string>? satisfiedRequirements = null)
     {
-        var requirements = satisfiedRequirements?.ToList().AsReadOnly() ?? (IReadOnlyList<string>)[];
+        var requirements = satisfiedRequirements?.ToList().AsReadOnly() ?? [];
         return new AuthorizationDecision(true, [], requirements);
     }
 
@@ -52,7 +52,7 @@ public sealed class AuthorizationDecision
         IEnumerable<string>? satisfiedRequirements = null)
     {
         var reasons = denyReasons.ToList().AsReadOnly();
-        var requirements = satisfiedRequirements?.ToList().AsReadOnly() ?? (IReadOnlyList<string>)[];
+        var requirements = satisfiedRequirements?.ToList().AsReadOnly() ?? [];
         return new AuthorizationDecision(false, reasons, requirements);
     }
 

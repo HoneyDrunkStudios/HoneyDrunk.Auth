@@ -25,7 +25,7 @@ public sealed class BearerTokenAuthenticationProviderTests
     {
         var key = TestTokenGenerator.GenerateKey();
         _keyProvider = new InMemorySigningKeyProvider()
-            .AddKey(key.KeyId!, ((Microsoft.IdentityModel.Tokens.SymmetricSecurityKey)key).Key);
+            .AddKey(key.KeyId!, key.Key);
 
         _telemetryFactory = Substitute.For<ITelemetryActivityFactory>();
 

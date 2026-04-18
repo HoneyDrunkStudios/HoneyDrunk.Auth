@@ -45,7 +45,7 @@ public sealed class HoneyDrunkAuthMiddlewareTests
     {
         // Arrange
         var context = new DefaultHttpContext();
-        context.Request.Headers[HeaderNames.Authorization] = "Basic dXNlcjpwYXNz";
+        context.Request.Headers[HeaderNames.Authorization] = "Basic dGVzdA==";
 
         var nextCalled = false;
         var middleware = CreateMiddleware(() => nextCalled = true);
@@ -84,8 +84,8 @@ public sealed class HoneyDrunkAuthMiddlewareTests
 
         // Assert
         Assert.True(nextCalled);
-        Assert.True(context.Items.ContainsKey(HttpContextIdentityAccessor.IdentityKey));
-        var identity = context.Items[HttpContextIdentityAccessor.IdentityKey] as AuthenticatedIdentity;
+        Assert.True(context.Items.TryGetValue(HttpContextIdentityAccessor.IdentityKey, out var identityValue));
+        var identity = identityValue as AuthenticatedIdentity;
         Assert.NotNull(identity);
         Assert.Equal("user-123", identity.SubjectId);
     }

@@ -43,8 +43,6 @@ public sealed class HttpContextIdentityAccessorTests
     {
         // Arrange
         var httpContextAccessor = Substitute.For<IHttpContextAccessor>();
-        httpContextAccessor.HttpContext.Returns((HttpContext?)null);
-
         var accessor = new HttpContextIdentityAccessor(httpContextAccessor);
 
         // Act
@@ -146,8 +144,6 @@ public sealed class HttpContextIdentityAccessorTests
     {
         // Arrange
         var httpContextAccessor = Substitute.For<IHttpContextAccessor>();
-        httpContextAccessor.HttpContext.Returns((HttpContext?)null);
-
         var accessor = new HttpContextIdentityAccessor(httpContextAccessor);
 
         // Act

@@ -51,18 +51,14 @@ public sealed class AuthorizationPolicyEvaluator
         // Check required roles (ANY role is sufficient)
         if (request.RequiredRoles.Count > 0)
         {
-            var hasAnyRole = false;
-            foreach (var requiredRole in request.RequiredRoles)
-            {
-                if (identity.HasClaim(AuthClaimTypes.Role, requiredRole))
-                {
-                    satisfiedRequirements.Add($"role:{requiredRole}");
-                    hasAnyRole = true;
-                    break;
-                }
-            }
+            var matchedRole = request.RequiredRoles.FirstOrDefault(
+                role => identity.HasClaim(AuthClaimTypes.Role, role));
 
-            if (!hasAnyRole)
+            if (matchedRole is not null)
+            {
+                satisfiedRequirements.Add($"role:{matchedRole}");
+            }
+            else
             {
                 denyReasons.Add(new DenyReason(
                     AuthorizationDenyCode.MissingRole,
