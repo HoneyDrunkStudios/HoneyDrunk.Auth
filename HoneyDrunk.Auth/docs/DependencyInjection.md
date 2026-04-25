@@ -187,8 +187,7 @@ public static IHoneyDrunkBuilder AddAuth(this IHoneyDrunkBuilder builder)
 ```csharp
 builder.Services
     .AddHoneyDrunkNode(opts => { /* ... */ })
-    .AddAuthBootstrap()
-    .AddAuth();  // Fluent chaining
+    .AddAuthBootstrap();  // Fluent chaining
 ```
 
 ### Builder Pattern Benefits

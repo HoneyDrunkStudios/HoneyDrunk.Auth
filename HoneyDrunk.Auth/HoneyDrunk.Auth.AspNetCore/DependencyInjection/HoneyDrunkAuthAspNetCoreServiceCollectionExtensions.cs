@@ -22,6 +22,7 @@ public static class HoneyDrunkAuthAspNetCoreServiceCollectionExtensions
     /// <item>Core Auth services via <see cref="HoneyDrunkAuthServiceCollectionExtensions.AddHoneyDrunkAuth(IServiceCollection)"/></item>
     /// <item><see cref="IAuthenticatedIdentityAccessor"/> - HTTP context-based identity accessor</item>
     /// <item><see cref="IHttpContextAccessor"/> - if not already registered</item>
+    /// <item>Event Grid vault invalidation handlers for <c>/internal/vault/invalidate</c></item>
     /// </list>
     /// </remarks>
     public static IServiceCollection AddHoneyDrunkAuthAspNetCore(this IServiceCollection services)

@@ -11,7 +11,9 @@ namespace HoneyDrunk.Auth.Secrets;
 /// Vault-backed implementation of <see cref="ISigningKeyProvider"/>.
 /// </summary>
 /// <remarks>
-/// Retrieves signing keys and configuration from HoneyDrunk.Vault.
+/// Retrieves signing keys through <see cref="ISecretStore"/> and reads non-secret
+/// validation settings from <see cref="IConfiguration"/>, typically populated by
+/// Azure App Configuration.
 /// </remarks>
 /// <remarks>
 /// Initializes a new instance of the <see cref="VaultSigningKeyProvider"/> class.
