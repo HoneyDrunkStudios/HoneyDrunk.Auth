@@ -1,4 +1,5 @@
 using HoneyDrunk.Auth.DependencyInjection;
+using HoneyDrunk.Vault.EventGrid.Extensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -21,6 +22,7 @@ public static class HoneyDrunkAuthAspNetCoreServiceCollectionExtensions
     /// <item>Core Auth services via <see cref="HoneyDrunkAuthServiceCollectionExtensions.AddHoneyDrunkAuth(IServiceCollection)"/></item>
     /// <item><see cref="IAuthenticatedIdentityAccessor"/> - HTTP context-based identity accessor</item>
     /// <item><see cref="IHttpContextAccessor"/> - if not already registered</item>
+    /// <item>Event Grid vault invalidation handlers for <c>/internal/vault/invalidate</c></item>
     /// </list>
     /// </remarks>
     public static IServiceCollection AddHoneyDrunkAuthAspNetCore(this IServiceCollection services)
@@ -35,6 +37,9 @@ public static class HoneyDrunkAuthAspNetCoreServiceCollectionExtensions
 
         // Add identity accessor
         services.TryAddSingleton<IAuthenticatedIdentityAccessor, HttpContextIdentityAccessor>();
+
+        // Add Event Grid invalidation handlers for /internal/vault/invalidate
+        services.AddVaultEventGridInvalidation();
 
         return services;
     }

@@ -9,10 +9,10 @@
 
     <!-- Package Metadata -->
     <PackageId>HoneyDrunk.Auth</PackageId>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>Authentication and authorization library for .NET. Provides JWT Bearer token validation, policy-based authorization, Vault-backed signing key management, and integration with HoneyDrunk.Kernel for Grid-aware context propagation.</Description>
-    <PackageReleaseNotes>v0.2.0: Added AuthOptions with configurable required claims. Introduced CachingSigningKeyProvider decorator with cache preloading at startup. Extracted AuthorizationPolicyEvaluator for pure policy evaluation. Added Vault pre-validation and dependency guard in DI registration. Improved error handling with typed failure codes. Reduced log verbosity to avoid leaking sensitive data. Updated HoneyDrunk.Kernel to 0.4.0, HoneyDrunk.Vault to 0.2.0, and Microsoft.IdentityModel.JsonWebTokens to 8.15.0.</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.3.0: Added ADR-0005 bootstrap with env-var-driven Azure Key Vault and App Configuration providers. Moved JWT signing keys to the provider-grouped Jwt--SigningKeys secret via ISecretStore and non-secret Auth settings to App Configuration. Updated HoneyDrunk.Vault dependencies to 0.3.0.</PackageReleaseNotes>
     <PackageTags>authentication;authorization;jwt;bearer;security;identity;claims;policy;vault;kernel;grid</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -36,7 +36,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="HoneyDrunk.Vault" Version="0.2.0" />
+    <PackageReference Include="HoneyDrunk.Vault" Version="0.3.0" />
+    <PackageReference Include="HoneyDrunk.Vault.Providers.AppConfiguration" Version="0.3.0" />
+    <PackageReference Include="HoneyDrunk.Vault.Providers.AzureKeyVault" Version="0.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.5" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.17.0" />
   </ItemGroup>
 

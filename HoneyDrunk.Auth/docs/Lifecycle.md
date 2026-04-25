@@ -1,4 +1,4 @@
-﻿# ❤️ Lifecycle - Health, Readiness, and Startup Hooks
+# ❤️ Lifecycle - Health, Readiness, and Startup Hooks
 
 [← Back to File Guide](FILE_GUIDE.md)
 
@@ -27,9 +27,9 @@ Lifecycle components that integrate Auth with HoneyDrunk.Kernel's lifecycle mana
 Application Start
       ↓
 AuthStartupHook.ExecuteAsync()
-  - Validate auth:issuer
-  - Validate auth:audience
-  - Validate auth:signing_keys
+  - Validate Auth:Issuer
+  - Validate Auth:Audience
+  - Validate Jwt--SigningKeys
   - Cache validated configuration
   - Throw if any missing → Fail fast
       ↓
@@ -110,15 +110,15 @@ The hook runs with `Priority = 100`, which is relatively late in the startup seq
 
 The hook validates three critical secrets:
 
-1. **Issuer** (`auth:issuer`)
+1. **Issuer** (`Auth:Issuer`)
    - Must be present and non-empty
    - Used for JWT token validation
 
-2. **Audience** (`auth:audience`)
+2. **Audience** (`Auth:Audience`)
    - Must be present and non-empty
    - Used for JWT token validation
 
-3. **Signing Keys** (`auth:signing_keys`)
+3. **Signing Keys** (`Jwt--SigningKeys`)
    - Must contain at least one active key
    - Used for JWT signature validation
 
@@ -143,9 +143,9 @@ if (errors.Count > 0)
 info: HoneyDrunk.Auth.Lifecycle.AuthStartupHook
       Validating Auth secrets in Vault...
 debug: HoneyDrunk.Auth.Lifecycle.AuthStartupHook
-      Validated auth:issuer = https://auth.honeydrunk.io
+      Validated Auth:Issuer = https://auth.honeydrunk.io
 debug: HoneyDrunk.Auth.Lifecycle.AuthStartupHook
-      Validated auth:audience = honeydrunk-grid
+      Validated Auth:Audience = honeydrunk-grid
 debug: HoneyDrunk.Auth.Lifecycle.AuthStartupHook
       Validated 2 active signing keys
 info: HoneyDrunk.Auth.Lifecycle.AuthStartupHook

@@ -1,4 +1,4 @@
-﻿# 🔐 Authentication - JWT Bearer Token Validation
+# 🔐 Authentication - JWT Bearer Token Validation
 
 [← Back to File Guide](FILE_GUIDE.md)
 
@@ -65,11 +65,11 @@ The provider validates tokens with the following parameters:
 
 | Parameter | Source | Description |
 |-----------|--------|-------------|
-| `ValidateIssuer` | `auth:issuer` | Token must be issued by trusted issuer |
-| `ValidateAudience` | `auth:audience` | Token must be intended for this audience |
+| `ValidateIssuer` | `Auth:Issuer` | Token must be issued by trusted issuer |
+| `ValidateAudience` | `Auth:Audience` | Token must be intended for this audience |
 | `ValidateLifetime` | JWT exp/nbf claims | Token must not be expired or not-yet-valid |
-| `ValidateIssuerSigningKey` | `auth:signing_keys` | Token signature must be valid |
-| `ClockSkew` | `auth:clock_skew_seconds` | Tolerance for time differences (default: 5 min) |
+| `ValidateIssuerSigningKey` | `Jwt--SigningKeys` | Token signature must be valid |
+| `ClockSkew` | `Auth:ClockSkewSeconds` | Tolerance for time differences (default: 5 min) |
 
 ### Claim Handling
 

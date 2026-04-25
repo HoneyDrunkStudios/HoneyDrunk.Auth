@@ -103,10 +103,10 @@ Auth expects the following secrets in Vault:
 
 | Key | Type | Description |
 |-----|------|-------------|
-| `auth:issuer` | String | JWT token issuer (e.g., `https://auth.honeydrunk.io`) |
-| `auth:audience` | String | JWT token audience (e.g., `api://honeydrunk`) |
-| `auth:signing_keys` | JSON Array | Array of signing key objects (see format below) |
-| `auth:clock_skew_seconds` | Integer (optional) | Token validation clock skew tolerance (default: 300) |
+| `Auth:Issuer` | String | JWT token issuer (e.g., `https://auth.honeydrunk.io`) |
+| `Auth:Audience` | String | JWT token audience (e.g., `api://honeydrunk`) |
+| `Jwt--SigningKeys` | JSON Array | Array of signing key objects (see format below) |
+| `Auth:ClockSkewSeconds` | Integer (optional) | Token validation clock skew tolerance (default: 300) |
 
 ### Signing Keys Format
 

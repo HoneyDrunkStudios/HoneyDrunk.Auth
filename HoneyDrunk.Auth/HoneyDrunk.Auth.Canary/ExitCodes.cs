@@ -32,6 +32,9 @@ internal static class ExitCodes
     // Purity boundary failures (70-79)
     public const int PurityViolation = 70;
 
+    // Secret boundary failures (80-89)
+    public const int SecretBoundaryViolation = 80;
+
     // General unexpected error
     public const int UnexpectedError = 99;
 }

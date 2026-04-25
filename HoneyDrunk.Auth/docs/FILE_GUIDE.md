@@ -1,4 +1,4 @@
-﻿# 📦 HoneyDrunk.Auth - Complete File Guide
+# 📦 HoneyDrunk.Auth - Complete File Guide
 
 ## Overview
 
@@ -81,10 +81,10 @@ requiredRoles: ["admin"]
 **Vault Secret Structure:**
 
 ```
-auth:issuer          → "https://auth.honeydrunk.io"
-auth:audience        → "honeydrunk-grid"
-auth:signing_keys    → [{"kid":"key1","alg":"HS256","key":"base64...","active":true}]
-auth:clock_skew_seconds → 300 (optional)
+Auth:Issuer          → "https://auth.honeydrunk.io"
+Auth:Audience        → "honeydrunk-grid"
+Jwt--SigningKeys    → [{"kid":"key1","alg":"HS256","key":"base64...","active":true}]
+Auth:ClockSkewSeconds → 300 (optional)
 ```
 
 ### Installation
@@ -110,7 +110,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHoneyDrunkNode(opts => { /* ... */ });
 
 // Step 2: Register Vault (required for Auth)
-builder.Services.AddVault(opts => { /* ... */ });
+builder.Services.AddAuthBootstrap();
 
 // Step 3: Register Auth with ASP.NET Core integration
 builder.Services.AddHoneyDrunkAuthAspNetCore();
@@ -274,9 +274,9 @@ HoneyDrunk.Auth/
 - **Evaluation constraints**: Authorization evaluation is local, deterministic, and side-effect free (no external calls during evaluation)
 
 ### Vault-Backed Secrets
-- Signing keys retrieved from `auth:signing_keys`
-- Issuer/audience from `auth:issuer` and `auth:audience`
-- Optional clock skew from `auth:clock_skew_seconds`
+- Signing keys retrieved from `Jwt--SigningKeys`
+- Issuer/audience from `Auth:Issuer` and `Auth:Audience`
+- Optional clock skew from `Auth:ClockSkewSeconds`
 - No local key storage
 
 ### Kernel Integration
@@ -290,8 +290,8 @@ HoneyDrunk.Auth/
 The startup hook enforces the following invariants before the node accepts traffic:
 
 - **Signing keys**: At least one active signing key must be available from Vault
-- **Issuer**: The `auth:issuer` secret must be present and non-empty
-- **Audience**: The `auth:audience` secret must be present and non-empty
+- **Issuer**: The `Auth:Issuer` App Configuration value must be present and non-empty
+- **Audience**: The `Auth:Audience` App Configuration value must be present and non-empty
 - **Failure behavior**: If any invariant fails, the startup hook throws, preventing the node from starting
 - **Vault availability**: If Vault is reachable but returns empty data, startup fails (empty is not valid)
 

@@ -20,6 +20,7 @@
 //   51 = Unknown kid with vault down did not return VaultUnavailable
 //   60 = PolicyNotFound indistinguishable from generic Deny
 //   70 = Purity boundary violation detected
+//   80 = Secret boundary violation detected
 //   99 = Unexpected error
 // ============================================================================
 
@@ -34,6 +35,7 @@ using HoneyDrunk.Auth.DependencyInjection;
 using HoneyDrunk.Auth.Secrets;
 using HoneyDrunk.Kernel.Abstractions.Telemetry;
 using HoneyDrunk.Vault.Abstractions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -108,6 +110,13 @@ try
         return exitCode;
     }
 
+    // Check 10: Secret values flow through ISecretStore only
+    exitCode = await Check10_SecretValuesFlowThroughISecretStoreOnly();
+    if (exitCode != ExitCodes.Success)
+    {
+        return exitCode;
+    }
+
     Console.WriteLine();
     Console.WriteLine("=== ALL CHECKS PASSED ===");
     return ExitCodes.Success;
@@ -131,9 +140,8 @@ static Task<int> Check1_GuardMissingKernel()
         var services = new ServiceCollection();
         services.AddLogging();
 
-        // Add Vault stubs but NOT Kernel
+        // Add Vault secret store but NOT Kernel
         services.AddSingleton<ISecretStore>(StubSecretStore.Instance);
-        services.AddSingleton<IVaultClient>(StubVaultClient.Instance);
 
         // This should throw with our authored guard message
         services.AddHoneyDrunkAuth();
@@ -564,6 +572,57 @@ static Task<int> Check9_PurityBoundary()
     return Task.FromResult(ExitCodes.Success);
 }
 
+static async Task<int> Check10_SecretValuesFlowThroughISecretStoreOnly()
+{
+    const string name = "Secret boundary (ISecretStore is the only secret path)";
+
+    var store = new RecordingSecretStore(CreateSigningKeysJson());
+    var configuration = new ConfigurationBuilder()
+        .AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Auth:Issuer"] = "https://issuer.example.com",
+            ["Auth:Audience"] = "api://honeydrunk-auth",
+            ["Auth:ClockSkewSeconds"] = "60",
+        })
+        .Build();
+
+    var provider = new VaultSigningKeyProvider(
+        store,
+        configuration,
+        new CapturingLogger<VaultSigningKeyProvider>());
+
+    _ = await provider.GetSigningKeysAsync();
+    _ = await provider.GetIssuerAsync();
+    _ = await provider.GetAudienceAsync();
+    _ = await provider.GetClockSkewAsync();
+
+    if (store.RequestedSecretNames.Count != 1 ||
+        !string.Equals(store.RequestedSecretNames[0], "Jwt--SigningKeys", StringComparison.Ordinal))
+    {
+        Console.WriteLine($"FAIL {name}: Expected only Jwt--SigningKeys from ISecretStore");
+        return ExitCodes.SecretBoundaryViolation;
+    }
+
+    if (store.RequestedIdentifiers.Any(identifier => identifier.Version is not null))
+    {
+        Console.WriteLine($"FAIL {name}: Secret read pinned to a specific version");
+        return ExitCodes.SecretBoundaryViolation;
+    }
+
+    var constructorUsesVaultClient = typeof(VaultSigningKeyProvider)
+        .GetConstructors()
+        .SelectMany(ctor => ctor.GetParameters())
+        .Any(parameter => parameter.ParameterType == typeof(IVaultClient));
+    if (constructorUsesVaultClient)
+    {
+        Console.WriteLine($"FAIL {name}: VaultSigningKeyProvider still accepts IVaultClient");
+        return ExitCodes.SecretBoundaryViolation;
+    }
+
+    Console.WriteLine($"PASS {name}");
+    return ExitCodes.Success;
+}
+
 // ============================================================================
 // Helper Methods
 // ============================================================================
@@ -579,9 +638,8 @@ static (ServiceCollection services, ToggleableSigningKeyProvider innerProvider) 
     // Kernel requirement
     services.AddSingleton<ITelemetryActivityFactory>(NoOpTelemetryActivityFactory.Instance);
 
-    // Vault stubs to satisfy guards
+    // Vault secret store to satisfy guards
     services.AddSingleton<ISecretStore>(StubSecretStore.Instance);
-    services.AddSingleton<IVaultClient>(StubVaultClient.Instance);
 
     // Configure auth options
     services.Configure<AuthOptions>(opts =>
@@ -621,4 +679,17 @@ static (ServiceCollection services, ToggleableSigningKeyProvider innerProvider) 
     });
 
     return (services, innerProvider);
+}
+
+static string CreateSigningKeysJson()
+{
+    var keyMaterial = Convert.ToBase64String(new byte[32]
+    {
+        1, 2, 3, 4, 5, 6, 7, 8,
+        9, 10, 11, 12, 13, 14, 15, 16,
+        17, 18, 19, 20, 21, 22, 23, 24,
+        25, 26, 27, 28, 29, 30, 31, 32,
+    });
+
+    return $$"""[{"kid":"auth-key-1","alg":"HS256","key":"{{keyMaterial}}","active":true}]""";
 }

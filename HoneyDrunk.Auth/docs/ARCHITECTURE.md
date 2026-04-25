@@ -237,8 +237,8 @@ The startup hook enforces the following invariants before the node accepts traff
 | Invariant | Requirement |
 |-----------|-------------|
 | **Signing Keys** | At least one active signing key must be available from Vault |
-| **Issuer** | The `auth:issuer` secret must be present and non-empty |
-| **Audience** | The `auth:audience` secret must be present and non-empty |
+| **Issuer** | The `Auth:Issuer` App Configuration value must be present and non-empty |
+| **Audience** | The `Auth:Audience` App Configuration value must be present and non-empty |
 | **Failure Behavior** | If any invariant fails, the startup hook throws, preventing the node from starting |
 | **Empty Data** | If Vault is reachable but returns empty data, startup fails (empty is not valid) |
 
@@ -254,20 +254,20 @@ Only `HoneyDrunk.Auth` directly accesses Vault. The ASP.NET Core layer uses Auth
 
 ```csharp
 // VaultSigningKeyProvider uses:
-ISecretStore.TryGetSecretAsync(new SecretIdentifier("auth:signing_keys"), ct);
-IVaultClient.GetConfigValueAsync("auth:issuer", ct);
-IVaultClient.GetConfigValueAsync("auth:audience", ct);
-IVaultClient.TryGetConfigValueAsync("auth:clock_skew_seconds", 300, ct);
+ISecretStore.TryGetSecretAsync(new SecretIdentifier("Jwt--SigningKeys"), ct);
+configuration["Auth:Issuer"];
+configuration["Auth:Audience"];
+configuration.GetValue("Auth:ClockSkewSeconds", 300);
 ```
 
 ### Required Secrets
 
 | Secret | Path | Required | Description |
 |--------|------|----------|-------------|
-| Signing Keys | `auth:signing_keys` | ✅ Yes | Array of signing key objects |
-| Issuer | `auth:issuer` | ✅ Yes | Token issuer URI |
-| Audience | `auth:audience` | ✅ Yes | Expected audience |
-| Clock Skew | `auth:clock_skew_seconds` | ❌ No | Token time tolerance (default: 300) |
+| Signing Keys | `Jwt--SigningKeys` | ✅ Yes | Array of signing key objects |
+| Issuer | `Auth:Issuer` | ✅ Yes | Token issuer URI |
+| Audience | `Auth:Audience` | ✅ Yes | Expected audience |
+| Clock Skew | `Auth:ClockSkewSeconds` | ❌ No | Token time tolerance (default: 300) |
 
 ### Signing Key Structure
 
@@ -292,7 +292,7 @@ IVaultClient.TryGetConfigValueAsync("auth:clock_skew_seconds", 300, ct);
 
 Multiple signing keys can be active simultaneously:
 
-1. **Add new key** - Add new key to `auth:signing_keys` with `active: true`
+1. **Add new key** - Add new key to `Jwt--SigningKeys` with `active: true`
 2. **Start signing** - Begin signing new tokens with new key
 3. **Grace period** - Old tokens continue to validate until expiration
 4. **Remove old key** - Remove old key from array when no longer needed

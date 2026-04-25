@@ -8,10 +8,10 @@
 
     <!-- Package Metadata -->
     <PackageId>HoneyDrunk.Auth.Abstractions</PackageId>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>Core abstractions and contracts for HoneyDrunk.Auth. Provides authentication and authorization interfaces including IAuthenticationProvider, IAuthorizationPolicy, AuthenticatedIdentity, and AuthorizationDecision types.</Description>
-    <PackageReleaseNotes>v0.2.0: Added ConfigurationError and VaultUnavailable authentication failure codes; added PolicyNotFound authorization deny code.</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.3.0: Package version aligned with the ADR-0005/0006 Auth bootstrap release. No contract changes.</PackageReleaseNotes>
     <PackageTags>authentication;authorization;jwt;security;abstractions;identity;claims;policy</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
