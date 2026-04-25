@@ -13,8 +13,10 @@
 | Dependency | Version | Purpose |
 |------------|---------|---------|
 | HoneyDrunk.Kernel | 0.4.0 | Context, telemetry, lifecycle |
-| HoneyDrunk.Vault | 0.1.0 | Secret management |
-| Microsoft.IdentityModel.JsonWebTokens | 8.3.1 | JWT validation |
+| HoneyDrunk.Vault | 0.3.0 | Secret management |
+| HoneyDrunk.Vault.Providers.AzureKeyVault | 0.3.0 | Env-var-driven Key Vault bootstrap |
+| HoneyDrunk.Vault.Providers.AppConfiguration | 0.3.0 | Env-var-driven App Configuration bootstrap |
+| Microsoft.IdentityModel.JsonWebTokens | 8.17.0 | JWT validation |
 
 ### HoneyDrunk.Auth.AspNetCore
 
@@ -22,6 +24,7 @@
 |------------|---------|---------|
 | HoneyDrunk.Kernel | 0.4.0 | Context, telemetry |
 | Microsoft.AspNetCore.App | (framework) | ASP.NET Core integration |
+| HoneyDrunk.Vault.EventGrid | 0.3.0 | Event Grid cache invalidation endpoint |
 
 ## Forbidden Dependencies
 
@@ -38,17 +41,18 @@ The following dependencies are **not allowed** in Auth projects:
 ### Vault Constraint
 
 - ✅ `HoneyDrunk.Auth` may reference `HoneyDrunk.Vault`
-- ❌ `HoneyDrunk.Auth.AspNetCore` must NOT reference `HoneyDrunk.Vault`
+- ✅ `HoneyDrunk.Auth.AspNetCore` may reference `HoneyDrunk.Vault.EventGrid` for webhook routing
 - ❌ `HoneyDrunk.Auth.Abstractions` must NOT reference `HoneyDrunk.Vault`
 
-## Vault Secret Keys
+## Secret and Configuration Keys
 
-Auth requires the following secrets in Vault:
+Auth requires signing keys in Key Vault and non-secret token validation settings in App Configuration.
 
-### auth:issuer
+### Auth:Issuer
 
 **Type**: String
 **Required**: Yes
+**Source**: App Configuration label `honeydrunk-auth`
 **Description**: The expected JWT issuer claim value.
 
 **Example**:
@@ -56,10 +60,11 @@ Auth requires the following secrets in Vault:
 https://auth.honeydrunk.io
 ```
 
-### auth:audience
+### Auth:Audience
 
 **Type**: String
 **Required**: Yes
+**Source**: App Configuration label `honeydrunk-auth`
 **Description**: The expected JWT audience claim value.
 
 **Example**:
@@ -67,10 +72,11 @@ https://auth.honeydrunk.io
 api://honeydrunk
 ```
 
-### auth:signing_keys
+### Jwt--SigningKeys
 
 **Type**: JSON Array
 **Required**: Yes (at least one active key)
+**Source**: Auth Key Vault `kv-hd-auth-{env}`
 **Description**: Array of signing key objects for token validation.
 
 **Format**:
@@ -105,11 +111,12 @@ api://honeydrunk
 - All active keys are tried when validating signatures
 - Remove old keys after tokens expire (typically after max token lifetime)
 
-### auth:clock_skew_seconds
+### Auth:ClockSkewSeconds
 
 **Type**: Integer
 **Required**: No
 **Default**: 300 (5 minutes)
+**Source**: App Configuration label `honeydrunk-auth`
 **Description**: Tolerance for clock skew when validating token expiration.
 
 **Example**:
@@ -121,28 +128,28 @@ api://honeydrunk
 
 At startup, Auth validates:
 
-1. `auth:issuer` exists and is non-empty
-2. `auth:audience` exists and is non-empty
-3. `auth:signing_keys` contains at least one active key
+1. `Auth:Issuer` exists and is non-empty
+2. `Auth:Audience` exists and is non-empty
+3. `Jwt--SigningKeys` contains at least one active key
 
 If any validation fails, the Node will **fail to start** with a clear error message.
 
 ## Secret Access Patterns
 
-Auth uses the following Vault APIs:
+Auth uses `ISecretStore` for secrets and `IConfiguration` for non-secret App Configuration values:
 
 ```csharp
 // Get signing keys
-ISecretStore.TryGetSecretAsync(new SecretIdentifier("auth:signing_keys"), ct);
+ISecretStore.TryGetSecretAsync(new SecretIdentifier("Jwt--SigningKeys"), ct);
 
 // Get issuer
-IVaultClient.GetConfigValueAsync("auth:issuer", ct);
+configuration["Auth:Issuer"];
 
 // Get audience
-IVaultClient.GetConfigValueAsync("auth:audience", ct);
+configuration["Auth:Audience"];
 
 // Get clock skew (with default)
-IVaultClient.TryGetConfigValueAsync<int>("auth:clock_skew_seconds", 300, ct);
+configuration.GetValue("Auth:ClockSkewSeconds", 300);
 ```
 
 ## Generating Signing Keys

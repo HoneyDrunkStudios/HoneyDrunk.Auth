@@ -1,4 +1,4 @@
-﻿# HoneyDrunk.Auth
+# HoneyDrunk.Auth
 
 [![NuGet](https://img.shields.io/nuget/v/HoneyDrunk.Auth.svg)](https://www.nuget.org/packages/HoneyDrunk.Auth)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -64,23 +64,28 @@ dotnet add package HoneyDrunk.Auth
 // Via IHoneyDrunkBuilder (recommended)
 builder.Services
     .AddHoneyDrunkNode(opts => { /* ... */ })
-    .AddVault(opts => { /* ... */ })
-    .AddAuth();
+    .AddAuthBootstrap();
 
 // Or directly
 builder.Services.AddHoneyDrunkAuth();
 ```
 
-### Configure Vault Secrets
+### Configure Secrets and App Configuration
 
-Ensure the following secrets exist in Vault:
+Ensure the following secrets exist in the Auth Key Vault:
 
 | Key | Description |
 |-----|-------------|
-| `auth:issuer` | JWT token issuer |
-| `auth:audience` | JWT token audience |
-| `auth:signing_keys` | JSON array of signing keys |
-| `auth:clock_skew_seconds` | (optional) Clock skew tolerance |
+| `Jwt--SigningKeys` | JSON array of signing keys |
+| `VaultInvalidationWebhookSecret` | Shared secret for Event Grid cache invalidation |
+
+Store non-secret settings in shared App Configuration with the `honeydrunk-auth` label:
+
+| Key | Description |
+|-----|-------------|
+| `Auth:Issuer` | JWT token issuer |
+| `Auth:Audience` | JWT token audience |
+| `Auth:ClockSkewSeconds` | (optional) Clock skew tolerance |
 
 ### Authenticate Tokens
 

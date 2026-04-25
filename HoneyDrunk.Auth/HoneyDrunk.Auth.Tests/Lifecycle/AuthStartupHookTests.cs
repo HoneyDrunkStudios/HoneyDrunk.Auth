@@ -61,7 +61,7 @@ public sealed class AuthStartupHookTests
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             hook.ExecuteAsync(CancellationToken.None));
-        Assert.Contains("auth:issuer is empty or missing", ex.Message);
+        Assert.Contains("Auth:Issuer is empty or missing", ex.Message);
     }
 
     /// <summary>
@@ -81,7 +81,7 @@ public sealed class AuthStartupHookTests
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             hook.ExecuteAsync(CancellationToken.None));
-        Assert.Contains("auth:issuer is empty or missing", ex.Message);
+        Assert.Contains("Auth:Issuer is empty or missing", ex.Message);
     }
 
     /// <summary>
@@ -101,7 +101,7 @@ public sealed class AuthStartupHookTests
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             hook.ExecuteAsync(CancellationToken.None));
-        Assert.Contains("auth:audience is empty or missing", ex.Message);
+        Assert.Contains("Auth:Audience is empty or missing", ex.Message);
     }
 
     /// <summary>
@@ -139,8 +139,8 @@ public sealed class AuthStartupHookTests
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             hook.ExecuteAsync(CancellationToken.None));
-        Assert.Contains("auth:issuer is empty or missing", ex.Message);
-        Assert.Contains("auth:audience is empty or missing", ex.Message);
+        Assert.Contains("Auth:Issuer is empty or missing", ex.Message);
+        Assert.Contains("Auth:Audience is empty or missing", ex.Message);
         Assert.Contains("No active signing keys found", ex.Message);
     }
 
@@ -164,7 +164,7 @@ public sealed class AuthStartupHookTests
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             hook.ExecuteAsync(CancellationToken.None));
-        Assert.Contains("Failed to retrieve auth:issuer", ex.Message);
+        Assert.Contains("Failed to retrieve Auth:Issuer", ex.Message);
         Assert.Contains("Vault issuer error", ex.Message);
     }
 
@@ -188,7 +188,7 @@ public sealed class AuthStartupHookTests
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             hook.ExecuteAsync(CancellationToken.None));
-        Assert.Contains("Failed to retrieve auth:audience", ex.Message);
+        Assert.Contains("Failed to retrieve Auth:Audience", ex.Message);
         Assert.Contains("Vault audience error", ex.Message);
     }
 
@@ -212,7 +212,7 @@ public sealed class AuthStartupHookTests
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             hook.ExecuteAsync(CancellationToken.None));
-        Assert.Contains("Failed to retrieve auth:signing_keys", ex.Message);
+        Assert.Contains("Failed to retrieve Jwt--SigningKeys", ex.Message);
         Assert.Contains("Vault keys error", ex.Message);
     }
 

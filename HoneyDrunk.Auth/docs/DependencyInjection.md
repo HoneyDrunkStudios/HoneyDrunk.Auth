@@ -1,4 +1,4 @@
-﻿# 🔌 Dependency Injection - Service Registration
+# 🔌 Dependency Injection - Service Registration
 
 [← Back to File Guide](FILE_GUIDE.md)
 
@@ -42,7 +42,7 @@ There are two registration patterns. Choose **one**, not both:
 
 | Pattern | When to Use | Example |
 |---------|-------------|---------|
-| **Builder pattern** | Grid services (Kernel + Vault + Auth) | `.AddHoneyDrunkNode().AddVault().AddAuth()` |
+| **Builder pattern** | Grid services (Kernel + Vault + App Configuration + Auth) | `.AddHoneyDrunkNode().AddAuthBootstrap()` |
 | **Direct ASP.NET Core** | ASP.NET Core apps | `AddHoneyDrunkAuthAspNetCore()` |
 
 > **Note:** Both patterns internally call `AddHoneyDrunkAuth()`, and `TryAdd` prevents duplicate registrations. However, mixing patterns in the same codebase creates confusion. Pick one style and use it consistently.
@@ -187,7 +187,7 @@ public static IHoneyDrunkBuilder AddAuth(this IHoneyDrunkBuilder builder)
 ```csharp
 builder.Services
     .AddHoneyDrunkNode(opts => { /* ... */ })
-    .AddVault(opts => { /* ... */ })
+    .AddAuthBootstrap()
     .AddAuth();  // Fluent chaining
 ```
 
@@ -343,12 +343,7 @@ builder.Services
         opts.NodeId = "api-node";
         opts.Name = "API Service";
     })
-    .AddVault(opts =>
-    {
-        opts.Address = builder.Configuration["Vault:Address"];
-        opts.Token = builder.Configuration["Vault:Token"];
-    })
-    .AddAuth();
+    .AddAuthBootstrap();
 
 // Add ASP.NET Core-specific services (identity accessor, etc.)
 builder.Services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -379,7 +374,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Register Kernel and Vault first (required)
 builder.Services.AddHoneyDrunkNode(opts => { /* ... */ });
-builder.Services.AddVault(opts => { /* ... */ });
+builder.Services.AddAuthBootstrap();
 
 // Use direct ASP.NET Core registration (includes core Auth + ASP.NET Core services)
 builder.Services.AddHoneyDrunkAuthAspNetCore();
@@ -410,7 +405,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services
     .AddHoneyDrunkNode(opts => { /* ... */ })
-    .AddVault(opts => { /* ... */ });
+    .AddAuthBootstrap();
 builder.Services.AddHoneyDrunkAuthAspNetCore();
 
 var app = builder.Build();

@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 namespace HoneyDrunk.Auth.Lifecycle;
 
 /// <summary>
-/// Startup hook that validates required Auth secrets are available in Vault and preloads the cache.
+/// Startup hook that validates required Auth secrets/configuration are available and preloads the cache.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -29,7 +29,7 @@ public sealed class AuthStartupHook(ISigningKeyProvider keyProvider, ILogger<Aut
     /// <inheritdoc />
     public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Validating Auth secrets in Vault...");
+        _logger.LogInformation("Validating Auth secrets and configuration...");
 
         // If using caching provider, preload the cache
         if (_keyProvider is CachingSigningKeyProvider cachingProvider)
@@ -41,8 +41,8 @@ public sealed class AuthStartupHook(ISigningKeyProvider keyProvider, ILogger<Aut
             }
             catch (Exception ex)
             {
-                _logger.LogCritical(ex, "Auth startup validation failed: unable to load secrets from Vault");
-                throw new InvalidOperationException("Auth startup validation failed: unable to load secrets from Vault", ex);
+                _logger.LogCritical(ex, "Auth startup validation failed: unable to load Auth bootstrap values");
+                throw new InvalidOperationException("Auth startup validation failed: unable to load Auth bootstrap values", ex);
             }
         }
 
@@ -55,16 +55,16 @@ public sealed class AuthStartupHook(ISigningKeyProvider keyProvider, ILogger<Aut
             var issuer = await _keyProvider.GetIssuerAsync(cancellationToken);
             if (string.IsNullOrWhiteSpace(issuer))
             {
-                errors.Add("auth:issuer is empty or missing");
+                errors.Add("Auth:Issuer is empty or missing");
             }
             else
             {
-                _logger.LogDebug("Validated auth:issuer");
+                _logger.LogDebug("Validated Auth:Issuer");
             }
         }
         catch (Exception ex)
         {
-            errors.Add($"Failed to retrieve auth:issuer: {ex.Message}");
+            errors.Add($"Failed to retrieve Auth:Issuer: {ex.Message}");
         }
 
         // Validate audience
@@ -73,16 +73,16 @@ public sealed class AuthStartupHook(ISigningKeyProvider keyProvider, ILogger<Aut
             var audience = await _keyProvider.GetAudienceAsync(cancellationToken);
             if (string.IsNullOrWhiteSpace(audience))
             {
-                errors.Add("auth:audience is empty or missing");
+                errors.Add("Auth:Audience is empty or missing");
             }
             else
             {
-                _logger.LogDebug("Validated auth:audience");
+                _logger.LogDebug("Validated Auth:Audience");
             }
         }
         catch (Exception ex)
         {
-            errors.Add($"Failed to retrieve auth:audience: {ex.Message}");
+            errors.Add($"Failed to retrieve Auth:Audience: {ex.Message}");
         }
 
         // Validate signing keys
@@ -91,7 +91,7 @@ public sealed class AuthStartupHook(ISigningKeyProvider keyProvider, ILogger<Aut
             var signingKeys = await _keyProvider.GetSigningKeysAsync(cancellationToken);
             if (signingKeys.Count == 0)
             {
-                errors.Add("No active signing keys found in auth:signing_keys");
+                errors.Add("No active signing keys found in Jwt--SigningKeys");
             }
             else
             {
@@ -100,7 +100,7 @@ public sealed class AuthStartupHook(ISigningKeyProvider keyProvider, ILogger<Aut
         }
         catch (Exception ex)
         {
-            errors.Add($"Failed to retrieve auth:signing_keys: {ex.Message}");
+            errors.Add($"Failed to retrieve Jwt--SigningKeys: {ex.Message}");
         }
 
         if (errors.Count > 0)
@@ -110,6 +110,6 @@ public sealed class AuthStartupHook(ISigningKeyProvider keyProvider, ILogger<Aut
             throw new InvalidOperationException($"Auth startup validation failed: {errorMessage}");
         }
 
-        _logger.LogInformation("Auth secrets validation completed successfully");
+        _logger.LogInformation("Auth secrets and configuration validation completed successfully");
     }
 }

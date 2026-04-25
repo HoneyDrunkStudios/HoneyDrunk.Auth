@@ -1,4 +1,4 @@
-﻿# 🔑 Secrets - Vault Integration and Signing Keys
+# 🔑 Secrets - Vault Integration and Signing Keys
 
 [← Back to File Guide](FILE_GUIDE.md)
 
@@ -16,18 +16,19 @@
 
 ## Overview
 
-Secret management components for retrieving signing keys and configuration from HoneyDrunk.Vault. The Auth system never stores secrets locally - all sensitive configuration comes from Vault.
+Secret management components for retrieving signing keys from HoneyDrunk.Vault and non-secret token validation settings from App Configuration. The Auth system never stores secrets locally.
 
 **Location:** `HoneyDrunk.Auth/Secrets/`
 
-**Vault Secrets Used:**
+**Secrets and Configuration Used:**
 
-| Key | Type | Required | Description |
-|-----|------|----------|-------------|
-| `auth:issuer` | String | ✅ Yes | Expected JWT token issuer |
-| `auth:audience` | String | ✅ Yes | Expected JWT token audience |
-| `auth:signing_keys` | JSON Array | ✅ Yes | Signing keys for token validation |
-| `auth:clock_skew_seconds` | Integer | ❌ No | Clock skew tolerance (default: 300) |
+| Key | Source | Type | Required | Description |
+|-----|--------|------|----------|-------------|
+| `Jwt--SigningKeys` | Key Vault | JSON Array | Yes | Signing keys for token validation |
+| `VaultInvalidationWebhookSecret` | Key Vault | String | Yes | Shared secret for Event Grid invalidation |
+| `Auth:Issuer` | App Configuration | String | Yes | Expected JWT token issuer |
+| `Auth:Audience` | App Configuration | String | Yes | Expected JWT token audience |
+| `Auth:ClockSkewSeconds` | App Configuration | Integer | No | Clock skew tolerance (default: 300) |
 
 ---
 
@@ -35,7 +36,7 @@ Secret management components for retrieving signing keys and configuration from 
 
 ### Startup Loading
 
-Signing keys and configuration are loaded from Vault **once at startup** by the `AuthStartupHook`. This ensures:
+Signing keys and configuration are loaded **once at startup** by the `AuthStartupHook`. This ensures:
 
 - **Fail-fast validation** - Missing or invalid secrets prevent the node from starting
 - **No request-time I/O** - Authentication never calls Vault during request processing
@@ -195,7 +196,7 @@ public sealed class VaultSigningKeyProvider : ISigningKeyProvider
 {
     public VaultSigningKeyProvider(
         ISecretStore secretStore,
-        IVaultClient vaultClient,
+        IConfiguration configuration,
         ILogger<VaultSigningKeyProvider> logger);
     
     // ISigningKeyProvider implementation
@@ -204,29 +205,29 @@ public sealed class VaultSigningKeyProvider : ISigningKeyProvider
 
 ### Purpose
 
-Vault-backed implementation of `ISigningKeyProvider`. Retrieves signing keys and configuration from HoneyDrunk.Vault.
+Vault-backed implementation of `ISigningKeyProvider`. Retrieves signing keys from HoneyDrunk.Vault and non-secret validation settings from App Configuration.
 
 ### Dependencies
 
 | Dependency | Purpose |
 |------------|---------|
 | `ISecretStore` | Retrieves secret values from Vault |
-| `IVaultClient` | Retrieves configuration values from Vault |
+| `IConfiguration` | Retrieves non-secret App Configuration values |
 | `ILogger<T>` | Logs key retrieval operations |
 
-### Vault Key Mappings
+### Key Mappings
 
 ```csharp
-private const string IssuerKey = "auth:issuer";
-private const string AudienceKey = "auth:audience";
-private const string SigningKeysKey = "auth:signing_keys";
-private const string ClockSkewKey = "auth:clock_skew_seconds";
+private const string IssuerKey = "Auth:Issuer";
+private const string AudienceKey = "Auth:Audience";
+private const string SigningKeysKey = "Jwt--SigningKeys";
+private const string ClockSkewKey = "Auth:ClockSkewSeconds";
 private const int DefaultClockSkewSeconds = 300;
 ```
 
 ### Key Parsing
 
-The provider parses the `auth:signing_keys` JSON array:
+The provider parses the `Jwt--SigningKeys` JSON array:
 
 ```csharp
 private List<SigningKeyInfo> ParseSigningKeys(string json)
@@ -283,20 +284,17 @@ services.AddHoneyDrunkAuth();
 services.AddSingleton<ISigningKeyProvider, VaultSigningKeyProvider>();
 ```
 
-### Vault Setup Example
+### Azure Setup Example
 
 ```bash
-# Set issuer
-vault kv put secret/auth issuer="https://auth.honeydrunk.io"
+# Key Vault secrets
+az keyvault secret set --vault-name kv-hd-auth-dev --name Jwt--SigningKeys --value '[{"kid":"key-1","alg":"HS256","key":"base64key==","active":true}]'
+az keyvault secret set --vault-name kv-hd-auth-dev --name VaultInvalidationWebhookSecret --value "<shared-webhook-secret>"
 
-# Set audience
-vault kv patch secret/auth audience="honeydrunk-grid"
-
-# Set signing keys (JSON array)
-vault kv patch secret/auth signing_keys='[{"kid":"key-1","alg":"HS256","key":"base64key==","active":true}]'
-
-# Set optional clock skew
-vault kv patch secret/auth clock_skew_seconds=300
+# Shared App Configuration values under the Auth label
+az appconfig kv set --name appcs-hd-shared-dev --key Auth:Issuer --label honeydrunk-auth --value "https://auth.honeydrunk.io"
+az appconfig kv set --name appcs-hd-shared-dev --key Auth:Audience --label honeydrunk-auth --value "honeydrunk-grid"
+az appconfig kv set --name appcs-hd-shared-dev --key Auth:ClockSkewSeconds --label honeydrunk-auth --value "300"
 ```
 
 ### Development/Testing

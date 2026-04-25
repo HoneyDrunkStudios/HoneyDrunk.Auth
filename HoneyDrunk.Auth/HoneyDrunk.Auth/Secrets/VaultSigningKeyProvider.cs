@@ -1,5 +1,6 @@
 using HoneyDrunk.Vault.Abstractions;
 using HoneyDrunk.Vault.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.Text.Json;
@@ -16,17 +17,17 @@ namespace HoneyDrunk.Auth.Secrets;
 /// Initializes a new instance of the <see cref="VaultSigningKeyProvider"/> class.
 /// </remarks>
 /// <param name="secretStore">The secret store.</param>
-/// <param name="vaultClient">The vault client.</param>
+/// <param name="configuration">The non-secret application configuration.</param>
 /// <param name="logger">The logger.</param>
 public sealed class VaultSigningKeyProvider(
     ISecretStore secretStore,
-    IVaultClient vaultClient,
+    IConfiguration configuration,
     ILogger<VaultSigningKeyProvider> logger) : ISigningKeyProvider
 {
-    private const string IssuerKey = "auth:issuer";
-    private const string AudienceKey = "auth:audience";
-    private const string SigningKeysKey = "auth:signing_keys";
-    private const string ClockSkewKey = "auth:clock_skew_seconds";
+    private const string IssuerKey = "Auth:Issuer";
+    private const string AudienceKey = "Auth:Audience";
+    private const string SigningKeysKey = "Jwt--SigningKeys";
+    private const string ClockSkewKey = "Auth:ClockSkewSeconds";
     private const int DefaultClockSkewSeconds = 300;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -35,7 +36,7 @@ public sealed class VaultSigningKeyProvider(
     };
 
     private readonly ISecretStore _secretStore = secretStore ?? throw new ArgumentNullException(nameof(secretStore));
-    private readonly IVaultClient _vaultClient = vaultClient ?? throw new ArgumentNullException(nameof(vaultClient));
+    private readonly IConfiguration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     private readonly ILogger<VaultSigningKeyProvider> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
@@ -64,24 +65,26 @@ public sealed class VaultSigningKeyProvider(
     }
 
     /// <inheritdoc />
-    public async Task<string> GetIssuerAsync(CancellationToken cancellationToken = default)
+    public Task<string> GetIssuerAsync(CancellationToken cancellationToken = default)
     {
-        var issuer = await _vaultClient.GetConfigValueAsync(IssuerKey, cancellationToken);
-        return issuer;
+        _ = cancellationToken;
+        return Task.FromResult(_configuration[IssuerKey] ?? string.Empty);
     }
 
     /// <inheritdoc />
-    public async Task<string> GetAudienceAsync(CancellationToken cancellationToken = default)
+    public Task<string> GetAudienceAsync(CancellationToken cancellationToken = default)
     {
-        var audience = await _vaultClient.GetConfigValueAsync(AudienceKey, cancellationToken);
-        return audience;
+        _ = cancellationToken;
+        return Task.FromResult(_configuration[AudienceKey] ?? string.Empty);
     }
 
     /// <inheritdoc />
-    public async Task<TimeSpan> GetClockSkewAsync(CancellationToken cancellationToken = default)
+    public Task<TimeSpan> GetClockSkewAsync(CancellationToken cancellationToken = default)
     {
-        var clockSkewSeconds = await _vaultClient.TryGetConfigValueAsync(ClockSkewKey, DefaultClockSkewSeconds, cancellationToken);
-        return TimeSpan.FromSeconds(clockSkewSeconds);
+        _ = cancellationToken;
+
+        var clockSkewSeconds = _configuration.GetValue(ClockSkewKey, DefaultClockSkewSeconds);
+        return Task.FromResult(TimeSpan.FromSeconds(clockSkewSeconds));
     }
 
     private static bool IsValidBase64Key(SigningKeyInfo keyInfo)

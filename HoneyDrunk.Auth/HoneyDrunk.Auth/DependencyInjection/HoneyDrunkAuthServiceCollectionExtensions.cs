@@ -110,10 +110,7 @@ public static class HoneyDrunkAuthServiceCollectionExtensions
         var hasSecretStore = services.Any(sd =>
             sd.ServiceType == typeof(ISecretStore));
 
-        var hasVaultClient = services.Any(sd =>
-            sd.ServiceType == typeof(IVaultClient));
-
-        if (!hasSecretStore || !hasVaultClient)
+        if (!hasSecretStore)
         {
             throw new InvalidOperationException(
                 "HoneyDrunk.Auth requires HoneyDrunk.Vault services. " +

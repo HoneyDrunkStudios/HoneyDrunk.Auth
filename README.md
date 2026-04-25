@@ -14,7 +14,7 @@ HoneyDrunk.Auth is the **security layer** of HoneyDrunk.OS. It provides a minima
 
 - ✅ **JWT Bearer Token Validation** - Industry-standard token validation with configurable issuers, audiences, and signing keys
 - ✅ **Policy-Based Authorization** - Scope-based, role-based, and ownership-based access control
-- ✅ **Vault Integration** - Signing keys and configuration retrieved securely from HoneyDrunk.Vault
+- ✅ **Vault Integration** - Signing keys retrieved securely from HoneyDrunk.Vault
 - ✅ **Kernel Integration** - Full telemetry, health checks, and lifecycle management
 - ✅ **ASP.NET Core Middleware** - Seamless integration with the request pipeline
 - ✅ **Fail-Fast Startup** - Validates secrets at startup, preventing misconfigured deployments
@@ -63,11 +63,10 @@ dotnet add package HoneyDrunk.Auth.Abstractions
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Register Kernel and Vault (required)
+// 1. Register Kernel, Vault, App Configuration, and Auth
 builder.Services
     .AddHoneyDrunkNode(opts => { /* ... */ })
-    .AddVault(opts => { /* ... */ })
-    .AddAuth();
+    .AddAuthBootstrap();
 
 // 2. Add ASP.NET Core integration
 builder.Services.AddHoneyDrunkAuthAspNetCore();
@@ -90,16 +89,22 @@ app.MapGet("/profile", (IAuthenticatedIdentityAccessor identity) =>
 app.Run();
 ```
 
-### Configure Vault Secrets
+### Configure Secrets and App Configuration
 
-Ensure the following secrets exist in Vault:
+Ensure the following secrets exist in the Auth Key Vault:
 
 | Key | Description |
 |-----|-------------|
-| `auth:issuer` | JWT token issuer (e.g., `https://auth.honeydrunk.io`) |
-| `auth:audience` | JWT token audience (e.g., `honeydrunk-grid`) |
-| `auth:signing_keys` | JSON array of signing keys |
-| `auth:clock_skew_seconds` | (optional) Clock skew tolerance (default: 300) |
+| `Jwt--SigningKeys` | JSON array of signing keys |
+| `VaultInvalidationWebhookSecret` | Shared secret for Event Grid cache invalidation |
+
+Store non-secret settings in shared App Configuration with the `honeydrunk-auth` label:
+
+| Key | Description |
+|-----|-------------|
+| `Auth:Issuer` | JWT token issuer (e.g., `https://auth.honeydrunk.io`) |
+| `Auth:Audience` | JWT token audience (e.g., `honeydrunk-grid`) |
+| `Auth:ClockSkewSeconds` | (optional) Clock skew tolerance (default: 300) |
 
 **Signing Keys Format:**
 

@@ -12,6 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - 2026-04-25
+
+### Added
+
+- ADR-0005/0006 bootstrap support using env-var-driven Key Vault, App Configuration, and Event Grid invalidation packages.
+- Deployment notes for `kv-hd-auth-{env}`, `honeydrunk-auth` App Configuration labels, and `/internal/vault/invalidate`.
+
+### Changed
+
+- Auth signing keys now use the provider-grouped `Jwt--SigningKeys` secret name.
+- Issuer, audience, and clock skew are documented as non-secret App Configuration values instead of Vault secrets.
+
 ## [0.2.0] - 2026-02-14
 
 ### Added
@@ -49,5 +61,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Telemetry, health, and readiness contributors
 - Full integration with HoneyDrunk.Kernel and HoneyDrunk.Vault
 
+[0.3.0]: https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth/releases/tag/v0.3.0
 [0.2.0]: https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth/releases/tag/v0.2.0
 [0.1.0]: https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth/releases/tag/v0.1.0

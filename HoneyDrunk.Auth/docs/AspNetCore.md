@@ -1,4 +1,4 @@
-﻿# 🌐 ASP.NET Core - Web Framework Integration
+# 🌐 ASP.NET Core - Web Framework Integration
 
 [← Back to File Guide](FILE_GUIDE.md)
 
@@ -518,7 +518,7 @@ builder.Services.AddHoneyDrunkNode(opts => { /* ... */ });
 
 
 // 2. Register Vault
-builder.Services.AddVault(opts => { /* ... */ });
+builder.Services.AddAuthBootstrap();
 
 
 // 3. Register Auth with ASP.NET Core integration
