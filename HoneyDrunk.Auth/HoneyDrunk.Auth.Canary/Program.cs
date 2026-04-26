@@ -309,9 +309,6 @@ static async Task<int> Check5_VaultDownUsesLastKnownGood()
         return ExitCodes.CacheLastKnownGoodFailed;
     }
 
-    // Record how many times the inner provider was called
-    var callsAfterWarmup = toggleableProvider.GetKeysCallCount;
-
     // Now flip Vault to unavailable
     toggleableProvider.IsAvailable = false;
 
@@ -554,18 +551,16 @@ static Task<int> Check9_PurityBoundary()
     var evaluatorType = typeof(AuthorizationPolicyEvaluator);
     var constructors = evaluatorType.GetConstructors();
 
-    foreach (var ctor in constructors)
+    var impureParameter = constructors
+        .SelectMany(ctor => ctor.GetParameters())
+        .FirstOrDefault(param =>
+            param.ParameterType == typeof(ITelemetryActivityFactory) ||
+            param.ParameterType.IsAssignableTo(typeof(ILogger)));
+
+    if (impureParameter is not null)
     {
-        var parameters = ctor.GetParameters();
-        foreach (var param in parameters)
-        {
-            if (param.ParameterType == typeof(ITelemetryActivityFactory) ||
-                param.ParameterType.IsAssignableTo(typeof(ILogger)))
-            {
-                Console.WriteLine($"FAIL {name}: Evaluator constructor has {param.ParameterType.Name} parameter, violating purity");
-                return Task.FromResult(ExitCodes.PurityViolation);
-            }
-        }
+        Console.WriteLine($"FAIL {name}: Evaluator constructor has {impureParameter.ParameterType.Name} parameter, violating purity");
+        return Task.FromResult(ExitCodes.PurityViolation);
     }
 
     Console.WriteLine($"PASS {name}");
