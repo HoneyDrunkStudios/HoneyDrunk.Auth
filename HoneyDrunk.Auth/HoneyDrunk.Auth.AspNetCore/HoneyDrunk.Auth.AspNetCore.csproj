@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -9,10 +9,10 @@
 
     <!-- Package Metadata -->
     <PackageId>HoneyDrunk.Auth.AspNetCore</PackageId>
-    <Version>0.3.0</Version>
+    <Version>0.4.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>ASP.NET Core integration for HoneyDrunk.Auth. Provides middleware for JWT Bearer token authentication, HttpContext identity accessors, and seamless integration with ASP.NET Core's authentication pipeline.</Description>
-    <PackageReleaseNotes>v0.3.0: Added HoneyDrunk.Vault.EventGrid integration and MapHoneyDrunkAuthVaultInvalidationWebhook for /internal/vault/invalidate cache invalidation.</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.4.0: Aligned ASP.NET Core integration with Auth 0.4.0 and HoneyDrunk.Vault.EventGrid 0.5.0 while preserving vault invalidation webhook behavior.</PackageReleaseNotes>
     <PackageTags>authentication;authorization;jwt;bearer;aspnetcore;middleware;security;identity</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -34,12 +34,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HoneyDrunk.Kernel" Version="0.4.0" />
     <PackageReference Include="HoneyDrunk.Standards" Version="0.2.7">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="HoneyDrunk.Vault.EventGrid" Version="0.3.0" />
+    <PackageReference Include="HoneyDrunk.Vault.EventGrid" Version="0.5.0" />
   </ItemGroup>
 
   <ItemGroup>

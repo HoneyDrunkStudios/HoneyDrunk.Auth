@@ -3,6 +3,7 @@ using HoneyDrunk.Auth.Authentication;
 using HoneyDrunk.Auth.Authorization;
 using HoneyDrunk.Auth.Lifecycle;
 using HoneyDrunk.Auth.Secrets;
+using HoneyDrunk.Kernel.Abstractions.Context;
 using HoneyDrunk.Kernel.Abstractions.Lifecycle;
 using HoneyDrunk.Kernel.Abstractions.Telemetry;
 using HoneyDrunk.Vault.Abstractions;
@@ -94,13 +95,17 @@ public static class HoneyDrunkAuthServiceCollectionExtensions
 
     private static void ValidateKernelServices(IServiceCollection services)
     {
+        var hasGridContextAccessor = services.Any(sd =>
+            sd.ServiceType == typeof(IGridContextAccessor));
+        var hasOperationContextAccessor = services.Any(sd =>
+            sd.ServiceType == typeof(IOperationContextAccessor));
         var hasTelemetryFactory = services.Any(sd =>
             sd.ServiceType == typeof(ITelemetryActivityFactory));
 
-        if (!hasTelemetryFactory)
+        if (!hasGridContextAccessor || !hasOperationContextAccessor || !hasTelemetryFactory)
         {
             throw new InvalidOperationException(
-                "HoneyDrunk.Auth requires HoneyDrunk.Kernel services. " +
+                "HoneyDrunk.Auth requires HoneyDrunk.Kernel services, including Grid and Operation context accessors. " +
                 "Call AddHoneyDrunkNode() before AddHoneyDrunkAuth().");
         }
     }

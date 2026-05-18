@@ -5,6 +5,20 @@ All notable changes to HoneyDrunk.Auth will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-05-18
+
+### Changed
+
+- Updated HoneyDrunk.Kernel consumption to HoneyDrunk.Kernel.Abstractions `0.7.0`.
+- Updated HoneyDrunk.Vault provider packages to `0.5.0`.
+- Auth registration now validates that Kernel Grid and Operation context accessors are registered, preserving the `AddHoneyDrunkNode()` prerequisite.
+- Updated Microsoft.Extensions.Configuration.Binder to `10.0.6` to match transitive Vault dependencies.
+
+### Verified
+
+- `VaultSigningKeyProvider` continues to read `Jwt--SigningKeys` only through `ISecretStore`.
+- Bearer authentication remains token validation only.
+
 ## [0.3.0] - 2026-04-25
 
 ### Added

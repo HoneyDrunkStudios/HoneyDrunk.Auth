@@ -33,6 +33,7 @@ using HoneyDrunk.Auth.Canary.Fakes;
 using HoneyDrunk.Auth.Canary.Helpers;
 using HoneyDrunk.Auth.DependencyInjection;
 using HoneyDrunk.Auth.Secrets;
+using HoneyDrunk.Kernel.Abstractions.Context;
 using HoneyDrunk.Kernel.Abstractions.Telemetry;
 using HoneyDrunk.Vault.Abstractions;
 using Microsoft.Extensions.Configuration;
@@ -170,7 +171,9 @@ static Task<int> Check2_GuardMissingVault()
         var services = new ServiceCollection();
         services.AddLogging();
 
-        // Add Kernel but NOT Vault
+        // Add Kernel guard services but NOT Vault
+        services.AddSingleton<IGridContextAccessor>(_ => throw new InvalidOperationException("Not used by this guard canary."));
+        services.AddSingleton<IOperationContextAccessor>(_ => throw new InvalidOperationException("Not used by this guard canary."));
         services.AddSingleton<ITelemetryActivityFactory>(NoOpTelemetryActivityFactory.Instance);
 
         // This should throw with our authored guard message
@@ -631,6 +634,8 @@ static (ServiceCollection services, ToggleableSigningKeyProvider innerProvider) 
     services.AddLogging(b => b.AddProvider(NullLoggerProvider.Instance));
 
     // Kernel requirement
+    services.AddSingleton<IGridContextAccessor>(_ => throw new InvalidOperationException("Not used by these canary checks."));
+    services.AddSingleton<IOperationContextAccessor>(_ => throw new InvalidOperationException("Not used by these canary checks."));
     services.AddSingleton<ITelemetryActivityFactory>(NoOpTelemetryActivityFactory.Instance);
 
     // Vault secret store to satisfy guards
