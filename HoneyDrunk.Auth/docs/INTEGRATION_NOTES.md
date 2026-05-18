@@ -1,23 +1,23 @@
 # Integration Notes: HoneyDrunk.Kernel and HoneyDrunk.Vault APIs
 
-This document lists the exact types and methods from HoneyDrunk.Kernel (v0.4.0) and HoneyDrunk.Vault that Auth integrates with.
+This document lists the exact types and methods from HoneyDrunk.Kernel.Abstractions (v0.7.0) and HoneyDrunk.Vault that Auth integrates with.
 
-## HoneyDrunk.Kernel Integration Points (v0.4.0)
+## HoneyDrunk.Kernel.Abstractions Integration Points (v0.7.0)
 
 ### Context Access
 
-> **Important (v0.4.0):** GridContext is now created by DI scope and initialized by middleware.
+> **Important:** GridContext is created by DI scope and initialized by middleware.
 > Auth **must not** create its own GridContext instances. Always access the ambient context via `IGridContextAccessor`.
 
 | Type | Usage |
 |------|-------|
-| `IGridContextAccessor` | Access ambient Grid context (read-only in v0.4.0) |
+| `IGridContextAccessor` | Access ambient Grid context (read-only) |
 | `IGridContext` | Read `CorrelationId`, `CausationId`, `TenantId`, `ProjectId`, `IsInitialized`; call `AddBaggage()` |
 | `IOperationContextAccessor` | Access ambient Operation context for current request/operation |
 | `IOperationContext` | Read `OperationName`, `OperationId`, `GridContext`; call `AddMetadata()` |
 | `INodeContext` | Read Node-level identifiers (`NodeId`, `StudioId`, `Environment`) |
 
-### v0.4.0 Breaking Changes
+### Kernel Context Contract Notes
 
 **IGridContextAccessor:**
 - Changed from `IGridContext? GridContext { get; set; }` to `IGridContext GridContext { get; }` (read-only)

@@ -12,19 +12,18 @@
 
 | Dependency | Version | Purpose |
 |------------|---------|---------|
-| HoneyDrunk.Kernel | 0.4.0 | Context, telemetry, lifecycle |
-| HoneyDrunk.Vault | 0.3.0 | Secret management |
-| HoneyDrunk.Vault.Providers.AzureKeyVault | 0.3.0 | Env-var-driven Key Vault bootstrap |
-| HoneyDrunk.Vault.Providers.AppConfiguration | 0.3.0 | Env-var-driven App Configuration bootstrap |
+| HoneyDrunk.Kernel.Abstractions | 0.7.0 | Context, telemetry, lifecycle contracts |
+| HoneyDrunk.Vault | 0.5.0 | Secret management |
+| HoneyDrunk.Vault.Providers.AzureKeyVault | 0.5.0 | Env-var-driven Key Vault bootstrap |
+| HoneyDrunk.Vault.Providers.AppConfiguration | 0.5.0 | Env-var-driven App Configuration bootstrap |
 | Microsoft.IdentityModel.JsonWebTokens | 8.17.0 | JWT validation |
 
 ### HoneyDrunk.Auth.AspNetCore
 
 | Dependency | Version | Purpose |
 |------------|---------|---------|
-| HoneyDrunk.Kernel | 0.4.0 | Context, telemetry |
 | Microsoft.AspNetCore.App | (framework) | ASP.NET Core integration |
-| HoneyDrunk.Vault.EventGrid | 0.3.0 | Event Grid cache invalidation endpoint |
+| HoneyDrunk.Vault.EventGrid | 0.5.0 | Event Grid cache invalidation endpoint |
 
 ## Forbidden Dependencies
 
@@ -40,6 +39,7 @@ The following dependencies are **not allowed** in Auth projects:
 
 ### Vault Constraint
 
+- ✅ `HoneyDrunk.Auth` may reference `HoneyDrunk.Kernel.Abstractions` for context/telemetry/lifecycle contracts
 - ✅ `HoneyDrunk.Auth` may reference `HoneyDrunk.Vault`
 - ✅ `HoneyDrunk.Auth.AspNetCore` may reference `HoneyDrunk.Vault.EventGrid` for webhook routing
 - ❌ `HoneyDrunk.Auth.Abstractions` must NOT reference `HoneyDrunk.Vault`

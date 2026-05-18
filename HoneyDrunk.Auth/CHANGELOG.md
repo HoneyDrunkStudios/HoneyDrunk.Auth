@@ -12,6 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.0] - 2026-05-18
+
+### Changed
+
+- Aligned Auth packages with HoneyDrunk.Kernel.Abstractions `0.7.0` and HoneyDrunk.Vault `0.5.0` packages.
+- Tightened Auth DI guards to require Kernel Grid and Operation context accessors from `AddHoneyDrunkNode()` before Auth registration.
+- Reduced Auth runtime dependency coupling by consuming Kernel abstractions instead of the full Kernel runtime package where possible.
+
+### Verified
+
+- JWT signing keys still resolve through Vault `ISecretStore` using `Jwt--SigningKeys`.
+- Auth remains validation-only; no token issuance behavior was added.
+
 ## [0.3.0] - 2026-04-25
 
 ### Added
