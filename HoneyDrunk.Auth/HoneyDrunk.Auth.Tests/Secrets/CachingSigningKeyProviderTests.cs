@@ -97,6 +97,10 @@ public sealed class CachingSigningKeyProviderTests
         Assert.Equal(issuer, await provider.GetIssuerAsync());
         Assert.Equal(audience, await provider.GetAudienceAsync());
         Assert.Equal(clockSkew, await provider.GetClockSkewAsync());
+        Assert.Equal(2, inner.SigningKeyCalls);
+        Assert.Equal(2, inner.IssuerCalls);
+        Assert.Equal(2, inner.AudienceCalls);
+        Assert.Equal(2, inner.ClockSkewCalls);
     }
 
     /// <summary>
