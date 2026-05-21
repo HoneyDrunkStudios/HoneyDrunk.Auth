@@ -1,3 +1,5 @@
+using HoneyDrunk.Audit.Abstractions;
+using HoneyDrunk.Auth.Authentication;
 using HoneyDrunk.Auth.Secrets;
 using HoneyDrunk.Kernel.Abstractions.Lifecycle;
 using Microsoft.Extensions.Logging;
@@ -17,10 +19,15 @@ namespace HoneyDrunk.Auth.Lifecycle;
 /// </para>
 /// </remarks>
 /// <param name="keyProvider">The signing key provider.</param>
+/// <param name="auditLog">The audit log registration used to detect no-op audit composition.</param>
 /// <param name="logger">The logger.</param>
-public sealed class AuthStartupHook(ISigningKeyProvider keyProvider, ILogger<AuthStartupHook> logger) : IStartupHook
+public sealed class AuthStartupHook(
+    ISigningKeyProvider keyProvider,
+    IAuditLog auditLog,
+    ILogger<AuthStartupHook> logger) : IStartupHook
 {
     private readonly ISigningKeyProvider _keyProvider = keyProvider ?? throw new ArgumentNullException(nameof(keyProvider));
+    private readonly IAuditLog _auditLog = auditLog ?? throw new ArgumentNullException(nameof(auditLog));
     private readonly ILogger<AuthStartupHook> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
@@ -111,5 +118,11 @@ public sealed class AuthStartupHook(ISigningKeyProvider keyProvider, ILogger<Aut
         }
 
         _logger.LogInformation("Auth secrets and configuration validation completed successfully");
+
+        if (_auditLog is NullAuditLog)
+        {
+            _logger.LogWarning(
+                "::warning:: HoneyDrunk.Audit.Abstractions.IAuditLog is not registered in the host container; security event audit emission is disabled (NullAuditLog stub active). Compose HoneyDrunk.Audit.Data (or another IAuditLog backing) in the host to enable durable security-event audit per the Grid's audit-emission boundary invariant. See https://github.com/HoneyDrunkStudios/HoneyDrunk.Audit#for-downstream-consumers---minimal-wiring.");
+        }
     }
 }

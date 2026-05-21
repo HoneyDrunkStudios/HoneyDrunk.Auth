@@ -1,6 +1,9 @@
+using HoneyDrunk.Audit.Abstractions;
+using HoneyDrunk.Auth.Authentication;
 using HoneyDrunk.Auth.Lifecycle;
 using HoneyDrunk.Auth.Secrets;
 using HoneyDrunk.Auth.Tests.Helpers;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -20,7 +23,7 @@ public sealed class AuthStartupHookTests
     {
         // Arrange
         var keyProvider = new InMemorySigningKeyProvider();
-        var hook = new AuthStartupHook(keyProvider, NullLogger<AuthStartupHook>.Instance);
+        var hook = new AuthStartupHook(keyProvider, Substitute.For<IAuditLog>(), NullLogger<AuthStartupHook>.Instance);
 
         // Assert
         Assert.Equal(100, hook.Priority);
@@ -38,7 +41,7 @@ public sealed class AuthStartupHookTests
             .WithIssuer("https://issuer.example.com")
             .WithAudience("api://test")
             .AddKey("test-key", new byte[32]);
-        var hook = new AuthStartupHook(keyProvider, NullLogger<AuthStartupHook>.Instance);
+        var hook = new AuthStartupHook(keyProvider, Substitute.For<IAuditLog>(), NullLogger<AuthStartupHook>.Instance);
 
         // Act & Assert - should not throw
         await hook.ExecuteAsync(CancellationToken.None);
@@ -56,7 +59,7 @@ public sealed class AuthStartupHookTests
             .WithIssuer(string.Empty)
             .WithAudience("api://test")
             .AddKey("test-key", new byte[32]);
-        var hook = new AuthStartupHook(keyProvider, NullLogger<AuthStartupHook>.Instance);
+        var hook = new AuthStartupHook(keyProvider, Substitute.For<IAuditLog>(), NullLogger<AuthStartupHook>.Instance);
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -76,7 +79,7 @@ public sealed class AuthStartupHookTests
             .WithIssuer("   ")
             .WithAudience("api://test")
             .AddKey("test-key", new byte[32]);
-        var hook = new AuthStartupHook(keyProvider, NullLogger<AuthStartupHook>.Instance);
+        var hook = new AuthStartupHook(keyProvider, Substitute.For<IAuditLog>(), NullLogger<AuthStartupHook>.Instance);
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -96,7 +99,7 @@ public sealed class AuthStartupHookTests
             .WithIssuer("https://issuer.example.com")
             .WithAudience(string.Empty)
             .AddKey("test-key", new byte[32]);
-        var hook = new AuthStartupHook(keyProvider, NullLogger<AuthStartupHook>.Instance);
+        var hook = new AuthStartupHook(keyProvider, Substitute.For<IAuditLog>(), NullLogger<AuthStartupHook>.Instance);
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -115,7 +118,7 @@ public sealed class AuthStartupHookTests
         var keyProvider = new InMemorySigningKeyProvider()
             .WithIssuer("https://issuer.example.com")
             .WithAudience("api://test");
-        var hook = new AuthStartupHook(keyProvider, NullLogger<AuthStartupHook>.Instance);
+        var hook = new AuthStartupHook(keyProvider, Substitute.For<IAuditLog>(), NullLogger<AuthStartupHook>.Instance);
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -134,7 +137,7 @@ public sealed class AuthStartupHookTests
         var keyProvider = new InMemorySigningKeyProvider()
             .WithIssuer(string.Empty)
             .WithAudience(string.Empty);
-        var hook = new AuthStartupHook(keyProvider, NullLogger<AuthStartupHook>.Instance);
+        var hook = new AuthStartupHook(keyProvider, Substitute.For<IAuditLog>(), NullLogger<AuthStartupHook>.Instance);
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -159,7 +162,7 @@ public sealed class AuthStartupHookTests
             .Returns("api://test");
         keyProvider.GetSigningKeysAsync(Arg.Any<CancellationToken>())
             .Returns([TestTokenGenerator.GenerateKey()]);
-        var hook = new AuthStartupHook(keyProvider, NullLogger<AuthStartupHook>.Instance);
+        var hook = new AuthStartupHook(keyProvider, Substitute.For<IAuditLog>(), NullLogger<AuthStartupHook>.Instance);
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -183,7 +186,7 @@ public sealed class AuthStartupHookTests
             .ThrowsAsync(new InvalidOperationException("Vault audience error"));
         keyProvider.GetSigningKeysAsync(Arg.Any<CancellationToken>())
             .Returns([TestTokenGenerator.GenerateKey()]);
-        var hook = new AuthStartupHook(keyProvider, NullLogger<AuthStartupHook>.Instance);
+        var hook = new AuthStartupHook(keyProvider, Substitute.For<IAuditLog>(), NullLogger<AuthStartupHook>.Instance);
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -207,7 +210,7 @@ public sealed class AuthStartupHookTests
             .Returns("api://test");
         keyProvider.GetSigningKeysAsync(Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Vault keys error"));
-        var hook = new AuthStartupHook(keyProvider, NullLogger<AuthStartupHook>.Instance);
+        var hook = new AuthStartupHook(keyProvider, Substitute.For<IAuditLog>(), NullLogger<AuthStartupHook>.Instance);
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -217,13 +220,35 @@ public sealed class AuthStartupHookTests
     }
 
     /// <summary>
+    /// Tests that ExecuteAsync logs a warning when the no-op audit sink is active.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task ExecuteAsync_NullAuditLog_LogsWarning()
+    {
+        // Arrange
+        var keyProvider = new InMemorySigningKeyProvider()
+            .WithIssuer("https://issuer.example.com")
+            .WithAudience("api://test")
+            .AddKey("test-key", new byte[32]);
+        var logger = new CapturingLogger<AuthStartupHook>();
+        var hook = new AuthStartupHook(keyProvider, new NullAuditLog(), logger);
+
+        // Act
+        await hook.ExecuteAsync(CancellationToken.None);
+
+        // Assert
+        Assert.Contains(logger.Messages, message => message.Contains("::warning::", StringComparison.Ordinal));
+    }
+
+    /// <summary>
     /// Tests that constructor throws when keyProvider is null.
     /// </summary>
     [Fact]
     public void Constructor_NullKeyProvider_ThrowsArgumentNullException()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            new AuthStartupHook(null!, NullLogger<AuthStartupHook>.Instance));
+            new AuthStartupHook(null!, Substitute.For<IAuditLog>(), NullLogger<AuthStartupHook>.Instance));
     }
 
     /// <summary>
@@ -234,6 +259,26 @@ public sealed class AuthStartupHookTests
     {
         var keyProvider = new InMemorySigningKeyProvider();
         Assert.Throws<ArgumentNullException>(() =>
-            new AuthStartupHook(keyProvider, null!));
+            new AuthStartupHook(keyProvider, Substitute.For<IAuditLog>(), null!));
+    }
+
+    private sealed class CapturingLogger<T> : ILogger<T>
+    {
+        public List<string> Messages { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            Messages.Add(formatter(state, exception));
+        }
     }
 }

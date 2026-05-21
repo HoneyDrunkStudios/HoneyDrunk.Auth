@@ -1,11 +1,15 @@
+using HoneyDrunk.Audit.Abstractions;
 using HoneyDrunk.Auth.Abstractions;
 using HoneyDrunk.Auth.Secrets;
 using HoneyDrunk.Auth.Telemetry;
+using HoneyDrunk.Kernel.Abstractions.Context;
 using HoneyDrunk.Kernel.Abstractions.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.Text.Json;
 
 namespace HoneyDrunk.Auth.Authentication;
 
@@ -18,16 +22,32 @@ namespace HoneyDrunk.Auth.Authentication;
 /// <param name="keyProvider">The signing key provider.</param>
 /// <param name="options">The auth options.</param>
 /// <param name="telemetryFactory">The telemetry activity factory.</param>
+/// <param name="auditLog">The audit log used to append token validation outcomes.</param>
+/// <param name="gridContextAccessor">The Grid context accessor used for correlation and tenant context.</param>
 /// <param name="logger">The logger.</param>
 public sealed class BearerTokenAuthenticationProvider(
     ISigningKeyProvider keyProvider,
     IOptions<AuthOptions> options,
     ITelemetryActivityFactory telemetryFactory,
+    IAuditLog auditLog,
+    IGridContextAccessor gridContextAccessor,
     ILogger<BearerTokenAuthenticationProvider> logger) : IAuthenticationProvider
 {
+    internal static readonly HashSet<string> AuditAllowedClaims = new(StringComparer.Ordinal)
+    {
+        JwtRegisteredClaimNames.Jti,
+        JwtRegisteredClaimNames.Iss,
+        JwtRegisteredClaimNames.Aud,
+        JwtRegisteredClaimNames.Exp,
+    };
+
+    private const int AuditContextMaxBytes = 4096;
+
     private readonly ISigningKeyProvider _keyProvider = keyProvider ?? throw new ArgumentNullException(nameof(keyProvider));
     private readonly AuthOptions _options = options?.Value ?? new AuthOptions();
     private readonly ITelemetryActivityFactory _telemetryFactory = telemetryFactory ?? throw new ArgumentNullException(nameof(telemetryFactory));
+    private readonly IAuditLog _auditLog = auditLog ?? throw new ArgumentNullException(nameof(auditLog));
+    private readonly IGridContextAccessor _gridContextAccessor = gridContextAccessor ?? throw new ArgumentNullException(nameof(gridContextAccessor));
     private readonly ILogger<BearerTokenAuthenticationProvider> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
@@ -55,6 +75,7 @@ public sealed class BearerTokenAuthenticationProvider(
             }
 
             var validationResult = await ValidateTokenAsync(credential.Value, cancellationToken);
+            await EmitTokenValidationAuditAsync(validationResult, credential.Value, cancellationToken);
             return validationResult;
         }
         catch (OperationCanceledException)
@@ -64,13 +85,81 @@ public sealed class BearerTokenAuthenticationProvider(
         catch (AuthenticationException ex)
         {
             // Rethrow known authentication exceptions with proper codes
-            return RecordFailure(activity, ex.FailureCode, ex.Message);
+            var failure = RecordFailure(activity, ex.FailureCode, ex.Message);
+            await EmitTokenValidationAuditAsync(failure, credential.Value, cancellationToken);
+            return failure;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Authentication failed with unexpected error");
-            return RecordFailure(activity, AuthenticationFailureCode.InternalError, "Unexpected authentication error");
+            var failure = RecordFailure(activity, AuthenticationFailureCode.InternalError, "Unexpected authentication error");
+            await EmitTokenValidationAuditAsync(failure, credential.Value, cancellationToken);
+            return failure;
         }
+    }
+
+    private static string CapContext(string json)
+    {
+        if (Encoding.UTF8.GetByteCount(json) <= AuditContextMaxBytes)
+        {
+            return json;
+        }
+
+        var bytes = Encoding.UTF8.GetBytes(json);
+        return Encoding.UTF8.GetString(bytes, 0, AuditContextMaxBytes - 16) + "...[truncated]";
+    }
+
+    private static IReadOnlyDictionary<string, string> BuildValidationMetadata(AuthenticationResult result, string token)
+    {
+        var metadata = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["scheme"] = AuthScheme.Bearer,
+        };
+
+        foreach (var claim in TryReadAllowedClaims(token))
+        {
+            metadata["claim." + claim.Key] = claim.Value;
+        }
+
+        if (!result.IsAuthenticated)
+        {
+            metadata["failureCode"] = result.FailureCode.ToString();
+            if (!string.IsNullOrWhiteSpace(result.FailureMessage))
+            {
+                metadata["failureMessage"] = result.FailureMessage;
+            }
+        }
+
+        var json = JsonSerializer.Serialize(metadata);
+        return Encoding.UTF8.GetByteCount(json) <= AuditContextMaxBytes
+            ? metadata
+            : new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["context"] = CapContext(json),
+                ["context.truncated"] = "true",
+            };
+    }
+
+    private static IReadOnlyDictionary<string, string> TryReadAllowedClaims(string token)
+    {
+        var metadata = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        try
+        {
+            var jwt = new JsonWebTokenHandler().ReadJsonWebToken(token);
+            foreach (var group in jwt.Claims
+                .Where(claim => AuditAllowedClaims.Contains(claim.Type))
+                .GroupBy(claim => claim.Type, StringComparer.Ordinal))
+            {
+                metadata[group.Key] = string.Join(",", group.Select(claim => claim.Value));
+            }
+        }
+        catch (Exception)
+        {
+            // Malformed tokens still produce a validation-denied audit entry without token text.
+        }
+
+        return metadata;
     }
 
     private static Dictionary<string, List<string>> ExtractClaims(TokenValidationResult result)
@@ -173,6 +262,39 @@ public sealed class BearerTokenAuthenticationProvider(
         catch
         {
             return null;
+        }
+    }
+
+    private async Task EmitTokenValidationAuditAsync(
+        AuthenticationResult result,
+        string token,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var gridContext = _gridContextAccessor.GridContext;
+            await _auditLog.AppendAsync(
+                new AuditEntry(
+                    AuditEntryId.Empty,
+                    DateTimeOffset.UtcNow,
+                    result.Identity?.SubjectId ?? "anonymous",
+                    "auth.token.validate",
+                    AuditCategory.Security,
+                    result.IsAuthenticated ? AuditOutcome.Succeeded : AuditOutcome.Denied,
+                    new AuditTarget("auth.token", result.Identity?.SubjectId ?? "anonymous"),
+                    gridContext.TenantId,
+                    gridContext.CorrelationId,
+                    Metadata: BuildValidationMetadata(result, token),
+                    Reason: result.FailureCode == AuthenticationFailureCode.None ? null : result.FailureCode.ToString()),
+                cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Audit emission failed for token validation; authentication outcome is unchanged");
         }
     }
 

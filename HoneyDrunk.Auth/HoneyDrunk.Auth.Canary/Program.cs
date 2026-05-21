@@ -24,6 +24,7 @@
 //   99 = Unexpected error
 // ============================================================================
 
+using HoneyDrunk.Audit.Abstractions;
 using HoneyDrunk.Auth;
 using HoneyDrunk.Auth.Abstractions;
 using HoneyDrunk.Auth.Authentication;
@@ -204,6 +205,7 @@ static async Task<int> Check3_HappyPathAuthentication()
     var (services, _) = BuildServicesWithCaching(toggleableProvider);
     var provider = services.BuildServiceProvider();
     var authProvider = provider.GetRequiredService<IAuthenticationProvider>();
+    var auditLog = provider.GetRequiredService<InMemoryAuditLog>();
 
     var token = TokenMinter.MintValid(key, subject: "canary-user-42", name: "Canary Test User");
     var credential = AuthCredential.Bearer(token);
@@ -219,6 +221,13 @@ static async Task<int> Check3_HappyPathAuthentication()
     if (result.Identity?.SubjectId != "canary-user-42")
     {
         Console.WriteLine($"FAIL {name}: SubjectId mismatch, expected 'canary-user-42' but got '{result.Identity?.SubjectId}'");
+        return ExitCodes.HappyPathFailed;
+    }
+
+    var auditEntry = auditLog.Snapshot().SingleOrDefault(entry => entry.EventName == "auth.token.validate");
+    if (auditEntry is null || auditEntry.Outcome != AuditOutcome.Succeeded || auditEntry.Actor != "canary-user-42")
+    {
+        Console.WriteLine($"FAIL {name}: Expected successful auth.token.validate audit entry");
         return ExitCodes.HappyPathFailed;
     }
 
@@ -634,7 +643,7 @@ static (ServiceCollection services, ToggleableSigningKeyProvider innerProvider) 
     services.AddLogging(b => b.AddProvider(NullLoggerProvider.Instance));
 
     // Kernel requirement
-    services.AddSingleton<IGridContextAccessor>(_ => throw new InvalidOperationException("Not used by these canary checks."));
+    services.AddSingleton<IGridContextAccessor>(CanaryGridContextAccessor.Instance);
     services.AddSingleton<IOperationContextAccessor>(_ => throw new InvalidOperationException("Not used by these canary checks."));
     services.AddSingleton<ITelemetryActivityFactory>(NoOpTelemetryActivityFactory.Instance);
 
@@ -660,22 +669,29 @@ static (ServiceCollection services, ToggleableSigningKeyProvider innerProvider) 
         return new CachingSigningKeyProvider(inner, opts, logger);
     });
 
+    services.AddSingleton<InMemoryAuditLog>();
+    services.AddSingleton<IAuditLog>(sp => sp.GetRequiredService<InMemoryAuditLog>());
+
     // Register authentication provider
     services.AddSingleton<IAuthenticationProvider>(sp =>
     {
         var keyProv = sp.GetRequiredService<ISigningKeyProvider>();
         var opts = sp.GetRequiredService<IOptions<AuthOptions>>();
         var telemetry = sp.GetRequiredService<ITelemetryActivityFactory>();
+        var auditLog = sp.GetRequiredService<IAuditLog>();
+        var gridContextAccessor = sp.GetRequiredService<IGridContextAccessor>();
         var logger = sp.GetRequiredService<ILogger<BearerTokenAuthenticationProvider>>();
-        return new BearerTokenAuthenticationProvider(keyProv, opts, telemetry, logger);
+        return new BearerTokenAuthenticationProvider(keyProv, opts, telemetry, auditLog, gridContextAccessor, logger);
     });
 
     // Register authorization policy (delegates to static AuthorizationPolicyEvaluator.Evaluate)
     services.AddSingleton<IAuthorizationPolicy>(sp =>
     {
         var telemetry = sp.GetRequiredService<ITelemetryActivityFactory>();
+        var auditLog = sp.GetRequiredService<IAuditLog>();
+        var gridContextAccessor = sp.GetRequiredService<IGridContextAccessor>();
         var logger = sp.GetRequiredService<ILogger<DefaultAuthorizationPolicy>>();
-        return new DefaultAuthorizationPolicy(telemetry, logger);
+        return new DefaultAuthorizationPolicy(telemetry, auditLog, gridContextAccessor, logger);
     });
 
     return (services, innerProvider);

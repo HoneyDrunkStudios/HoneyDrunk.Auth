@@ -1,11 +1,15 @@
+using HoneyDrunk.Audit.Abstractions;
 using HoneyDrunk.Auth.Abstractions;
 using HoneyDrunk.Auth.Authentication;
 using HoneyDrunk.Auth.Tests.Helpers;
+using HoneyDrunk.Kernel.Abstractions.Context;
+using HoneyDrunk.Kernel.Abstractions.Identity;
 using HoneyDrunk.Kernel.Abstractions.Telemetry;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using System.Security.Claims;
+using System.Text;
 
 namespace HoneyDrunk.Auth.Tests;
 
@@ -16,6 +20,7 @@ public sealed class BearerTokenAuthenticationProviderTests
 {
     private readonly InMemorySigningKeyProvider _keyProvider;
     private readonly ITelemetryActivityFactory _telemetryFactory;
+    private readonly IAuditLog _auditLog;
     private readonly BearerTokenAuthenticationProvider _provider;
 
     /// <summary>
@@ -28,6 +33,12 @@ public sealed class BearerTokenAuthenticationProviderTests
             .AddKey(key.KeyId!, key.Key);
 
         _telemetryFactory = Substitute.For<ITelemetryActivityFactory>();
+        _auditLog = Substitute.For<IAuditLog>();
+        var gridContext = Substitute.For<IGridContext>();
+        gridContext.TenantId.Returns(TenantId.Internal);
+        gridContext.CorrelationId.Returns("corr-test");
+        var gridContextAccessor = Substitute.For<IGridContextAccessor>();
+        gridContextAccessor.GridContext.Returns(gridContext);
 
         var options = Options.Create(new AuthOptions());
 
@@ -35,6 +46,8 @@ public sealed class BearerTokenAuthenticationProviderTests
             _keyProvider,
             options,
             _telemetryFactory,
+            _auditLog,
+            gridContextAccessor,
             NullLogger<BearerTokenAuthenticationProvider>.Instance);
     }
 
@@ -59,6 +72,64 @@ public sealed class BearerTokenAuthenticationProviderTests
         Assert.Equal("user-123", result.Identity.SubjectId);
         Assert.Equal("Test User", result.Identity.DisplayName);
         Assert.Equal(AuthScheme.Bearer, result.Identity.Scheme);
+    }
+
+    /// <summary>
+    /// Tests that valid bearer tokens append a security audit entry without raw token material.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task AuthenticateAsync_ValidToken_AppendsAuditEntry()
+    {
+        // Arrange
+        AuditEntry? entry = null;
+        await _auditLog.AppendAsync(Arg.Do<AuditEntry>(e => entry = e), Arg.Any<CancellationToken>());
+        var key = _keyProvider.SigningKeys[0];
+        var token = TestTokenGenerator.GenerateToken(key, subject: "user-123", name: "Test User");
+        var credential = AuthCredential.Bearer(token);
+
+        // Act
+        var result = await _provider.AuthenticateAsync(credential);
+
+        // Assert
+        Assert.True(result.IsAuthenticated);
+        Assert.NotNull(entry);
+        Assert.Equal("auth.token.validate", entry.EventName);
+        Assert.Equal(AuditCategory.Security, entry.Category);
+        Assert.Equal(AuditOutcome.Succeeded, entry.Outcome);
+        Assert.Equal("user-123", entry.Actor);
+        Assert.Equal(TenantId.Internal, entry.TenantId);
+        Assert.Equal("corr-test", entry.CorrelationId);
+        Assert.DoesNotContain(token, string.Join(" ", entry.Metadata?.Values ?? []));
+        Assert.DoesNotContain(entry.Metadata ?? new Dictionary<string, string>(), kvp => kvp.Key.Contains("sub", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Tests that failed bearer token validation appends a denied audit entry.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task AuthenticateAsync_InvalidSignature_AppendsDeniedAuditEntry()
+    {
+        // Arrange
+        AuditEntry? entry = null;
+        await _auditLog.AppendAsync(Arg.Do<AuditEntry>(e => entry = e), Arg.Any<CancellationToken>());
+        var wrongKey = TestTokenGenerator.GenerateKey("wrong-key");
+        var token = TestTokenGenerator.GenerateToken(wrongKey);
+        var credential = AuthCredential.Bearer(token);
+
+        // Act
+        var result = await _provider.AuthenticateAsync(credential);
+
+        // Assert
+        Assert.False(result.IsAuthenticated);
+        Assert.NotNull(entry);
+        Assert.Equal("auth.token.validate", entry.EventName);
+        Assert.Equal(AuditOutcome.Denied, entry.Outcome);
+        Assert.Equal("anonymous", entry.Actor);
+        Assert.Equal("InvalidSignature", entry.Reason);
+        Assert.Equal("InvalidSignature", entry.Metadata?["failureCode"]);
+        Assert.DoesNotContain(token, string.Join(" ", entry.Metadata?.Values ?? []));
     }
 
     /// <summary>
@@ -177,6 +248,66 @@ public sealed class BearerTokenAuthenticationProviderTests
         // Assert
         Assert.False(result.IsAuthenticated);
         Assert.Equal(AuthenticationFailureCode.UnsupportedScheme, result.FailureCode);
+    }
+
+    /// <summary>
+    /// Tests that audit-log failures do not change the authentication outcome.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task AuthenticateAsync_AuditLogThrows_ReturnsAuthenticationOutcome()
+    {
+        // Arrange
+        _auditLog.AppendAsync(Arg.Any<AuditEntry>(), Arg.Any<CancellationToken>())
+            .Returns(_ => throw new InvalidOperationException("audit down"));
+        var key = _keyProvider.SigningKeys[0];
+        var token = TestTokenGenerator.GenerateToken(key, subject: "user-123", name: "Test User");
+        var credential = AuthCredential.Bearer(token);
+
+        // Act
+        var result = await _provider.AuthenticateAsync(credential);
+
+        // Assert
+        Assert.True(result.IsAuthenticated);
+        Assert.Equal("user-123", result.Identity?.SubjectId);
+    }
+
+    /// <summary>
+    /// Tests that token-validation audit metadata uses the allow-list and caps oversized context.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task AuthenticateAsync_AuditMetadata_UsesAllowedClaimsAndCapsOversizedContext()
+    {
+        // Arrange
+        AuditEntry? entry = null;
+        await _auditLog.AppendAsync(Arg.Do<AuditEntry>(e => entry = e), Arg.Any<CancellationToken>());
+        var longIssuer = "https://" + new string('i', 10_000) + ".example.com";
+        _keyProvider.WithIssuer(longIssuer);
+        var key = _keyProvider.SigningKeys[0];
+        var claims = new[]
+        {
+            new Claim("secret-claim", "do-not-record"),
+            new Claim("name", "Do Not Record"),
+        };
+        var token = TestTokenGenerator.GenerateToken(key, issuer: longIssuer, subject: "user-123", claims: claims);
+        var credential = AuthCredential.Bearer(token);
+
+        // Act
+        var result = await _provider.AuthenticateAsync(credential);
+
+        // Assert
+        Assert.True(result.IsAuthenticated);
+        Assert.NotNull(entry);
+        Assert.Equal("true", entry.Metadata?["context.truncated"]);
+        var context = entry.Metadata?["context"];
+        Assert.NotNull(context);
+        Assert.True(Encoding.UTF8.GetByteCount(context) <= 4096);
+        Assert.EndsWith("...[truncated]", context, StringComparison.Ordinal);
+        Assert.DoesNotContain(token, context, StringComparison.Ordinal);
+        Assert.DoesNotContain("do-not-record", context, StringComparison.Ordinal);
+        Assert.DoesNotContain("Do Not Record", context, StringComparison.Ordinal);
+        Assert.DoesNotContain("user-123", context, StringComparison.Ordinal);
     }
 
     /// <summary>
