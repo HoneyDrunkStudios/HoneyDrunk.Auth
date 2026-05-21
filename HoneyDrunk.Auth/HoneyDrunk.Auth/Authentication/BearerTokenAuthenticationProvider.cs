@@ -1,5 +1,6 @@
 using HoneyDrunk.Audit.Abstractions;
 using HoneyDrunk.Auth.Abstractions;
+using HoneyDrunk.Auth.Audit;
 using HoneyDrunk.Auth.Secrets;
 using HoneyDrunk.Auth.Telemetry;
 using HoneyDrunk.Kernel.Abstractions.Context;
@@ -8,8 +9,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.Text.Json;
 
 namespace HoneyDrunk.Auth.Authentication;
 
@@ -40,8 +39,6 @@ public sealed class BearerTokenAuthenticationProvider(
         JwtRegisteredClaimNames.Aud,
         JwtRegisteredClaimNames.Exp,
     };
-
-    private const int AuditContextMaxBytes = 4096;
 
     private readonly ISigningKeyProvider _keyProvider = keyProvider ?? throw new ArgumentNullException(nameof(keyProvider));
     private readonly AuthOptions _options = options?.Value ?? new AuthOptions();
@@ -98,17 +95,6 @@ public sealed class BearerTokenAuthenticationProvider(
         }
     }
 
-    private static string CapContext(string json)
-    {
-        if (Encoding.UTF8.GetByteCount(json) <= AuditContextMaxBytes)
-        {
-            return json;
-        }
-
-        var bytes = Encoding.UTF8.GetBytes(json);
-        return Encoding.UTF8.GetString(bytes, 0, AuditContextMaxBytes - 16) + "...[truncated]";
-    }
-
     private static IReadOnlyDictionary<string, string> BuildValidationMetadata(AuthenticationResult result, string token)
     {
         var metadata = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -116,7 +102,7 @@ public sealed class BearerTokenAuthenticationProvider(
             ["scheme"] = AuthScheme.Bearer,
         };
 
-        foreach (var claim in TryReadAllowedClaims(token))
+        foreach (var claim in GetAllowedAuditClaims(result, token))
         {
             metadata["claim." + claim.Key] = claim.Value;
         }
@@ -130,14 +116,45 @@ public sealed class BearerTokenAuthenticationProvider(
             }
         }
 
-        var json = JsonSerializer.Serialize(metadata);
-        return Encoding.UTF8.GetByteCount(json) <= AuditContextMaxBytes
-            ? metadata
-            : new Dictionary<string, string>(StringComparer.Ordinal)
+        return AuditMetadata.Cap(metadata);
+    }
+
+    private static IReadOnlyDictionary<string, string> GetAllowedAuditClaims(AuthenticationResult result, string token)
+    {
+        return result.Identity is { } identity
+            ? GetAllowedAuditClaims(identity)
+            : TryReadAllowedClaims(token);
+    }
+
+    private static IReadOnlyDictionary<string, string> GetAllowedAuditClaims(AuthenticatedIdentity identity)
+    {
+        var metadata = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        foreach (var claimType in AuditAllowedClaims)
+        {
+            var values = identity.GetClaimValues(claimType);
+            if (values.Count > 0)
             {
-                ["context"] = CapContext(json),
-                ["context.truncated"] = "true",
-            };
+                metadata[claimType] = string.Join(",", values);
+            }
+        }
+
+        return metadata;
+    }
+
+    private static string GetAuditTokenTargetId(AuthenticationResult result, string token)
+    {
+        if (result.Identity is { } identity)
+        {
+            return identity.GetClaimValue(JwtRegisteredClaimNames.Jti) is { Length: > 0 } identityJti
+                ? identityJti
+                : "unavailable";
+        }
+
+        var parsedClaims = TryReadAllowedClaims(token);
+        return parsedClaims.TryGetValue(JwtRegisteredClaimNames.Jti, out var jti) && !string.IsNullOrWhiteSpace(jti)
+            ? jti
+            : "unavailable";
     }
 
     private static IReadOnlyDictionary<string, string> TryReadAllowedClaims(string token)
@@ -281,7 +298,7 @@ public sealed class BearerTokenAuthenticationProvider(
                     "auth.token.validate",
                     AuditCategory.Security,
                     result.IsAuthenticated ? AuditOutcome.Succeeded : AuditOutcome.Denied,
-                    new AuditTarget("auth.token", result.Identity?.SubjectId ?? "anonymous"),
+                    new AuditTarget("auth.token", GetAuditTokenTargetId(result, token)),
                     gridContext.TenantId,
                     gridContext.CorrelationId,
                     Metadata: BuildValidationMetadata(result, token),

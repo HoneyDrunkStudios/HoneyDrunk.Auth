@@ -238,7 +238,7 @@ public sealed class AuthStartupHookTests
         await hook.ExecuteAsync(CancellationToken.None);
 
         // Assert
-        Assert.Contains(logger.Messages, message => message.Contains("::warning::", StringComparison.Ordinal));
+        Assert.Contains(logger.Messages, message => message.Contains("NullAuditLog fallback is active", StringComparison.Ordinal));
     }
 
     /// <summary>

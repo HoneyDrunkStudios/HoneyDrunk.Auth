@@ -1,11 +1,10 @@
 using HoneyDrunk.Audit.Abstractions;
 using HoneyDrunk.Auth.Abstractions;
+using HoneyDrunk.Auth.Audit;
 using HoneyDrunk.Auth.Telemetry;
 using HoneyDrunk.Kernel.Abstractions.Context;
 using HoneyDrunk.Kernel.Abstractions.Telemetry;
 using Microsoft.Extensions.Logging;
-using System.Text;
-using System.Text.Json;
 
 namespace HoneyDrunk.Auth.Authorization;
 
@@ -33,8 +32,6 @@ public sealed class DefaultAuthorizationPolicy(
     IGridContextAccessor gridContextAccessor,
     ILogger<DefaultAuthorizationPolicy> logger) : IAuthorizationPolicy
 {
-    private const int AuditContextMaxBytes = 4096;
-
     private readonly ITelemetryActivityFactory _telemetryFactory = telemetryFactory ?? throw new ArgumentNullException(nameof(telemetryFactory));
     private readonly IAuditLog _auditLog = auditLog ?? throw new ArgumentNullException(nameof(auditLog));
     private readonly IGridContextAccessor _gridContextAccessor = gridContextAccessor ?? throw new ArgumentNullException(nameof(gridContextAccessor));
@@ -71,17 +68,6 @@ public sealed class DefaultAuthorizationPolicy(
         return decision;
     }
 
-    private static string CapContext(string json)
-    {
-        if (Encoding.UTF8.GetByteCount(json) <= AuditContextMaxBytes)
-        {
-            return json;
-        }
-
-        var bytes = Encoding.UTF8.GetBytes(json);
-        return Encoding.UTF8.GetString(bytes, 0, AuditContextMaxBytes - 16) + "...[truncated]";
-    }
-
     private static IReadOnlyDictionary<string, string> BuildAuthorizationMetadata(
         AuthorizationRequest request,
         AuthorizationDecision decision)
@@ -103,14 +89,7 @@ public sealed class DefaultAuthorizationPolicy(
             metadata["denyReasonCodes"] = string.Join(",", decision.DenyReasons.Select(reason => reason.Code.ToString()));
         }
 
-        var json = JsonSerializer.Serialize(metadata);
-        return Encoding.UTF8.GetByteCount(json) <= AuditContextMaxBytes
-            ? metadata
-            : new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["context"] = CapContext(json),
-                ["context.truncated"] = "true",
-            };
+        return AuditMetadata.Cap(metadata);
     }
 
     private static void RecordTelemetry(System.Diagnostics.Activity? activity, AuthorizationDecision decision)

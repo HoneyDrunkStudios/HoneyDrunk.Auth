@@ -7,6 +7,7 @@ using HoneyDrunk.Kernel.Abstractions.Identity;
 using HoneyDrunk.Kernel.Abstractions.Telemetry;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.JsonWebTokens;
 using NSubstitute;
 using System.Security.Claims;
 using System.Text;
@@ -60,7 +61,11 @@ public sealed class BearerTokenAuthenticationProviderTests
     {
         // Arrange
         var key = _keyProvider.SigningKeys[0];
-        var token = TestTokenGenerator.GenerateToken(key, subject: "user-123", name: "Test User");
+        var token = TestTokenGenerator.GenerateToken(
+            key,
+            subject: "user-123",
+            name: "Test User",
+            claims: [new Claim(JwtRegisteredClaimNames.Jti, "token-123")]);
         var credential = AuthCredential.Bearer(token);
 
         // Act
@@ -83,9 +88,14 @@ public sealed class BearerTokenAuthenticationProviderTests
     {
         // Arrange
         AuditEntry? entry = null;
-        await _auditLog.AppendAsync(Arg.Do<AuditEntry>(e => entry = e), Arg.Any<CancellationToken>());
+        _auditLog.AppendAsync(Arg.Do<AuditEntry>(e => entry = e), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
         var key = _keyProvider.SigningKeys[0];
-        var token = TestTokenGenerator.GenerateToken(key, subject: "user-123", name: "Test User");
+        var token = TestTokenGenerator.GenerateToken(
+            key,
+            subject: "user-123",
+            name: "Test User",
+            claims: [new Claim(JwtRegisteredClaimNames.Jti, "token-123")]);
         var credential = AuthCredential.Bearer(token);
 
         // Act
@@ -98,6 +108,8 @@ public sealed class BearerTokenAuthenticationProviderTests
         Assert.Equal(AuditCategory.Security, entry.Category);
         Assert.Equal(AuditOutcome.Succeeded, entry.Outcome);
         Assert.Equal("user-123", entry.Actor);
+        Assert.Equal("auth.token", entry.Target.Type);
+        Assert.Equal("token-123", entry.Target.Id);
         Assert.Equal(TenantId.Internal, entry.TenantId);
         Assert.Equal("corr-test", entry.CorrelationId);
         Assert.DoesNotContain(token, string.Join(" ", entry.Metadata?.Values ?? []));
@@ -113,7 +125,8 @@ public sealed class BearerTokenAuthenticationProviderTests
     {
         // Arrange
         AuditEntry? entry = null;
-        await _auditLog.AppendAsync(Arg.Do<AuditEntry>(e => entry = e), Arg.Any<CancellationToken>());
+        _auditLog.AppendAsync(Arg.Do<AuditEntry>(e => entry = e), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
         var wrongKey = TestTokenGenerator.GenerateKey("wrong-key");
         var token = TestTokenGenerator.GenerateToken(wrongKey);
         var credential = AuthCredential.Bearer(token);
@@ -127,6 +140,7 @@ public sealed class BearerTokenAuthenticationProviderTests
         Assert.Equal("auth.token.validate", entry.EventName);
         Assert.Equal(AuditOutcome.Denied, entry.Outcome);
         Assert.Equal("anonymous", entry.Actor);
+        Assert.Equal("unavailable", entry.Target.Id);
         Assert.Equal("InvalidSignature", entry.Reason);
         Assert.Equal("InvalidSignature", entry.Metadata?["failureCode"]);
         Assert.DoesNotContain(token, string.Join(" ", entry.Metadata?.Values ?? []));
@@ -281,7 +295,8 @@ public sealed class BearerTokenAuthenticationProviderTests
     {
         // Arrange
         AuditEntry? entry = null;
-        await _auditLog.AppendAsync(Arg.Do<AuditEntry>(e => entry = e), Arg.Any<CancellationToken>());
+        _auditLog.AppendAsync(Arg.Do<AuditEntry>(e => entry = e), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
         var longIssuer = "https://" + new string('i', 10_000) + ".example.com";
         _keyProvider.WithIssuer(longIssuer);
         var key = _keyProvider.SigningKeys[0];
@@ -303,6 +318,7 @@ public sealed class BearerTokenAuthenticationProviderTests
         var context = entry.Metadata?["context"];
         Assert.NotNull(context);
         Assert.True(Encoding.UTF8.GetByteCount(context) <= 4096);
+        Assert.DoesNotContain("�", context, StringComparison.Ordinal);
         Assert.EndsWith("...[truncated]", context, StringComparison.Ordinal);
         Assert.DoesNotContain(token, context, StringComparison.Ordinal);
         Assert.DoesNotContain("do-not-record", context, StringComparison.Ordinal);

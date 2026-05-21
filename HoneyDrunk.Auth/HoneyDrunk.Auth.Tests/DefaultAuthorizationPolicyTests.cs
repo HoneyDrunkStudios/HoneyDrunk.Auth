@@ -6,6 +6,7 @@ using HoneyDrunk.Kernel.Abstractions.Identity;
 using HoneyDrunk.Kernel.Abstractions.Telemetry;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
+using System.Text;
 
 namespace HoneyDrunk.Auth.Tests;
 
@@ -82,7 +83,8 @@ public sealed class DefaultAuthorizationPolicyTests
     {
         // Arrange
         AuditEntry? entry = null;
-        await _auditLog.AppendAsync(Arg.Do<AuditEntry>(e => entry = e), Arg.Any<CancellationToken>());
+        _auditLog.AppendAsync(Arg.Do<AuditEntry>(e => entry = e), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
         var identity = CreateIdentity(scopes: ["read"]);
         var request = new AuthorizationRequest("read", "resource", requiredScopes: ["read"]);
 
@@ -112,9 +114,10 @@ public sealed class DefaultAuthorizationPolicyTests
     {
         // Arrange
         AuditEntry? entry = null;
-        await _auditLog.AppendAsync(Arg.Do<AuditEntry>(e => entry = e), Arg.Any<CancellationToken>());
+        _auditLog.AppendAsync(Arg.Do<AuditEntry>(e => entry = e), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
         var identity = CreateIdentity(scopes: ["read"]);
-        var request = new AuthorizationRequest("write", "resource", requiredScopes: ["write"]);
+        var request = new AuthorizationRequest("write", "resource-" + new string('界', 5_000), requiredScopes: ["write"]);
 
         // Act
         var decision = await _policy.EvaluateAsync(identity, request);
@@ -125,7 +128,15 @@ public sealed class DefaultAuthorizationPolicyTests
         Assert.Equal("auth.authorize.write", entry.EventName);
         Assert.Equal(AuditOutcome.Denied, entry.Outcome);
         Assert.Equal("MissingScope", entry.Reason);
-        Assert.Equal("MissingScope", entry.Metadata?["denyReasonCodes"]);
+        if (entry.Metadata?.TryGetValue("context", out var context) == true)
+        {
+            Assert.True(Encoding.UTF8.GetByteCount(context) <= 4096);
+            Assert.DoesNotContain("�", context, StringComparison.Ordinal);
+        }
+        else
+        {
+            Assert.Equal("MissingScope", entry.Metadata?["denyReasonCodes"]);
+        }
     }
 
     /// <summary>

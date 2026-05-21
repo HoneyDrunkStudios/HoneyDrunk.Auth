@@ -122,7 +122,7 @@ public sealed class AuthStartupHook(
         if (_auditLog is NullAuditLog)
         {
             _logger.LogWarning(
-                "::warning:: HoneyDrunk.Audit.Abstractions.IAuditLog is not registered in the host container; security event audit emission is disabled (NullAuditLog stub active). Compose HoneyDrunk.Audit.Data (or another IAuditLog backing) in the host to enable durable security-event audit per the Grid's audit-emission boundary invariant. See https://github.com/HoneyDrunkStudios/HoneyDrunk.Audit#for-downstream-consumers---minimal-wiring.");
+                "Durable audit backing is not composed for HoneyDrunk.Auth; security event audit emission is disabled because the NullAuditLog fallback is active. Compose HoneyDrunk.Audit.Data (or another IAuditLog backing) in the host to enable durable security-event audit per the Grid's audit-emission boundary invariant. See https://github.com/HoneyDrunkStudios/HoneyDrunk.Audit#for-downstream-consumers---minimal-wiring.");
         }
     }
 }
