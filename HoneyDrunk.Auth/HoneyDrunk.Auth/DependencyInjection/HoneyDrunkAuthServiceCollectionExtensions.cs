@@ -1,3 +1,4 @@
+using HoneyDrunk.Audit.Abstractions;
 using HoneyDrunk.Auth.Abstractions;
 using HoneyDrunk.Auth.Authentication;
 using HoneyDrunk.Auth.Authorization;
@@ -80,6 +81,7 @@ public static class HoneyDrunkAuthServiceCollectionExtensions
                 sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<CachingSigningKeyProvider>>()));
 
         // Authentication
+        services.TryAddSingleton<IAuditLog, NullAuditLog>();
         services.TryAddSingleton<IAuthenticationProvider, BearerTokenAuthenticationProvider>();
 
         // Authorization - delegates to static AuthorizationPolicyEvaluator.Evaluate, wrapped with telemetry

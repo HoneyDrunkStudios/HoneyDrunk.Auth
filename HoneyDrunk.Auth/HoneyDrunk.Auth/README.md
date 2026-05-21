@@ -17,7 +17,7 @@ dotnet add package HoneyDrunk.Auth
 ```
 
 ```xml
-<PackageReference Include="HoneyDrunk.Auth" Version="0.1.0" />
+<PackageReference Include="HoneyDrunk.Auth" Version="0.5.0" />
 ```
 
 ## 🔧 Key Components
@@ -55,6 +55,10 @@ dotnet add package HoneyDrunk.Auth
 | Component | Description |
 |-----------|-------------|
 | `AuthTelemetry` | OpenTelemetry activity and tag constants |
+
+### Audit Emission
+
+Auth emits durable `IAuditLog` records for bearer-token validation outcomes (`auth.token.validate`) and authorization decisions (`auth.authorize.{action}`). Hosts must compose a real Audit backing, such as `HoneyDrunk.Audit.Data`, to persist those records; otherwise Auth uses a no-op fallback and logs a startup warning. Audit emission is additive to existing traces and does not place token text or claim payloads into OpenTelemetry. See [HoneyDrunk.Audit](https://github.com/HoneyDrunkStudios/HoneyDrunk.Audit#for-downstream-consumers---minimal-wiring) for host wiring guidance.
 
 ## 🚀 Usage
 
@@ -129,6 +133,7 @@ else
 | Package | Purpose |
 |---------|---------|
 | `HoneyDrunk.Auth.Abstractions` | Core contracts |
+| `HoneyDrunk.Audit.Abstractions` | Append-only audit emission contract |
 | `HoneyDrunk.Kernel` | Telemetry and lifecycle |
 | `HoneyDrunk.Vault` | Secret management |
 | `Microsoft.IdentityModel.JsonWebTokens` | JWT validation |

@@ -18,6 +18,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Backfilled Auth test coverage above the Grid PR coverage gate floor and seeded the coverage baseline ratchet artifact.
 
+## [0.5.0] - 2026-05-21
+
+### Added
+
+- Wired Auth as the first `IAuditLog` emitter using `HoneyDrunk.Audit.Abstractions` `0.1.0`.
+- Appended durable security audit entries for bearer token validation outcomes and authorization allow/deny decisions.
+- Added a no-op fallback audit sink plus startup warning when hosts have not composed a durable `IAuditLog` backing.
+
+### Verified
+
+- Auth depends only on `HoneyDrunk.Audit.Abstractions`; it does not depend on `HoneyDrunk.Audit.Data`.
+- Audit metadata avoids raw token material and subject claims.
+
 ## [0.4.0] - 2026-05-18
 
 ### Changed
@@ -80,6 +93,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Telemetry, health, and readiness contributors
 - Full integration with HoneyDrunk.Kernel and HoneyDrunk.Vault
 
+[0.5.0]: https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth/releases/tag/v0.5.0
+[0.4.0]: https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth/releases/tag/v0.4.0
 [0.3.0]: https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth/releases/tag/v0.3.0
 [0.2.0]: https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth/releases/tag/v0.2.0
 [0.1.0]: https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth/releases/tag/v0.1.0

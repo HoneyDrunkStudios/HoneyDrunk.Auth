@@ -9,10 +9,10 @@
 
     <!-- Package Metadata -->
     <PackageId>HoneyDrunk.Auth</PackageId>
-    <Version>0.4.0</Version>
+    <Version>0.5.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>Authentication and authorization library for .NET. Provides JWT Bearer token validation, policy-based authorization, Vault-backed signing key management, and integration with HoneyDrunk.Kernel for Grid-aware context propagation.</Description>
-    <PackageReleaseNotes>v0.4.0: Aligned Auth with HoneyDrunk.Kernel 0.7.0 and HoneyDrunk.Vault 0.5.0 while preserving Vault-backed Jwt--SigningKeys retrieval and validation-only Auth boundaries.</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.5.0: Added HoneyDrunk.Audit.Abstractions-backed security event emission for token validation and authorization decisions while preserving Auth validation-only boundaries.</PackageReleaseNotes>
     <PackageTags>authentication;authorization;jwt;bearer;security;identity;claims;policy;vault;kernel;grid</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -31,6 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="HoneyDrunk.Audit.Abstractions" Version="0.1.0" />
     <PackageReference Include="HoneyDrunk.Kernel.Abstractions" Version="0.7.0" />
     <PackageReference Include="HoneyDrunk.Standards" Version="0.2.7">
       <PrivateAssets>all</PrivateAssets>

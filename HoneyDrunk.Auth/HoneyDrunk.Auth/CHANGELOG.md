@@ -5,6 +5,20 @@ All notable changes to HoneyDrunk.Auth will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-05-21
+
+### Added
+
+- Added `HoneyDrunk.Audit.Abstractions` `0.1.0` dependency for append-only security-event audit emission.
+- `BearerTokenAuthenticationProvider` now appends `auth.token.validate` audit entries for successful and denied bearer token validation outcomes.
+- `DefaultAuthorizationPolicy` now appends `auth.authorize.{action}` audit entries for authorization grants and denials.
+- Registered a no-op `IAuditLog` fallback and startup warning for hosts that have not composed a durable Audit backing.
+
+### Verified
+
+- Auth emits through `IAuditLog` only and does not depend on `HoneyDrunk.Audit.Data`.
+- Audit metadata excludes raw token material and subject claims.
+
 ## [0.4.0] - 2026-05-18
 
 ### Changed

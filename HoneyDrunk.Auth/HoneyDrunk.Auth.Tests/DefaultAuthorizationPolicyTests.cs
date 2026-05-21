@@ -1,8 +1,12 @@
+using HoneyDrunk.Audit.Abstractions;
 using HoneyDrunk.Auth.Abstractions;
 using HoneyDrunk.Auth.Authorization;
+using HoneyDrunk.Kernel.Abstractions.Context;
+using HoneyDrunk.Kernel.Abstractions.Identity;
 using HoneyDrunk.Kernel.Abstractions.Telemetry;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
+using System.Text;
 
 namespace HoneyDrunk.Auth.Tests;
 
@@ -11,6 +15,7 @@ namespace HoneyDrunk.Auth.Tests;
 /// </summary>
 public sealed class DefaultAuthorizationPolicyTests
 {
+    private readonly IAuditLog _auditLog;
     private readonly DefaultAuthorizationPolicy _policy;
 
     /// <summary>
@@ -19,8 +24,16 @@ public sealed class DefaultAuthorizationPolicyTests
     public DefaultAuthorizationPolicyTests()
     {
         var telemetryFactory = Substitute.For<ITelemetryActivityFactory>();
+        _auditLog = Substitute.For<IAuditLog>();
+        var gridContext = Substitute.For<IGridContext>();
+        gridContext.TenantId.Returns(TenantId.Internal);
+        gridContext.CorrelationId.Returns("corr-test");
+        var gridContextAccessor = Substitute.For<IGridContextAccessor>();
+        gridContextAccessor.GridContext.Returns(gridContext);
         _policy = new DefaultAuthorizationPolicy(
             telemetryFactory,
+            _auditLog,
+            gridContextAccessor,
             NullLogger<DefaultAuthorizationPolicy>.Instance);
     }
 
@@ -59,6 +72,71 @@ public sealed class DefaultAuthorizationPolicyTests
         // Assert
         Assert.True(decision.IsAllowed);
         Assert.Contains("authenticated", decision.SatisfiedRequirements);
+    }
+
+    /// <summary>
+    /// Tests that authorization decisions append a security audit entry.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task EvaluateAsync_Decision_AppendsAuditEntry()
+    {
+        // Arrange
+        AuditEntry? entry = null;
+        _auditLog.AppendAsync(Arg.Do<AuditEntry>(e => entry = e), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        var identity = CreateIdentity(scopes: ["read"]);
+        var request = new AuthorizationRequest("read", "resource", requiredScopes: ["read"]);
+
+        // Act
+        var decision = await _policy.EvaluateAsync(identity, request);
+
+        // Assert
+        Assert.True(decision.IsAllowed);
+        Assert.NotNull(entry);
+        Assert.Equal("auth.authorize.read", entry.EventName);
+        Assert.Equal(AuditCategory.Security, entry.Category);
+        Assert.Equal(AuditOutcome.Succeeded, entry.Outcome);
+        Assert.Equal("user-123", entry.Actor);
+        Assert.Equal("auth.resource", entry.Target.Type);
+        Assert.Equal("resource", entry.Target.Id);
+        Assert.Equal(TenantId.Internal, entry.TenantId);
+        Assert.Equal("corr-test", entry.CorrelationId);
+        Assert.Equal("Default", entry.Metadata?["policy"]);
+    }
+
+    /// <summary>
+    /// Tests that authorization denials append denied audit entries with reason codes.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task EvaluateAsync_Denied_AppendsDeniedAuditEntry()
+    {
+        // Arrange
+        AuditEntry? entry = null;
+        _auditLog.AppendAsync(Arg.Do<AuditEntry>(e => entry = e), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        var identity = CreateIdentity(scopes: ["read"]);
+        var request = new AuthorizationRequest("write", "resource-" + new string('界', 5_000), requiredScopes: ["write"]);
+
+        // Act
+        var decision = await _policy.EvaluateAsync(identity, request);
+
+        // Assert
+        Assert.False(decision.IsAllowed);
+        Assert.NotNull(entry);
+        Assert.Equal("auth.authorize.write", entry.EventName);
+        Assert.Equal(AuditOutcome.Denied, entry.Outcome);
+        Assert.Equal("MissingScope", entry.Reason);
+        if (entry.Metadata?.TryGetValue("context", out var context) == true)
+        {
+            Assert.True(Encoding.UTF8.GetByteCount(context) <= 4096);
+            Assert.DoesNotContain("�", context, StringComparison.Ordinal);
+        }
+        else
+        {
+            Assert.Equal("MissingScope", entry.Metadata?["denyReasonCodes"]);
+        }
     }
 
     /// <summary>
