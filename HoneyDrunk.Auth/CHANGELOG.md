@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+
+- Enabled ADR-0044 OpenClaw/Codex Grid Review Runner request generation for repository PRs.
 - Aligned Auth packages with HoneyDrunk.Kernel.Abstractions `0.7.0` and HoneyDrunk.Vault `0.5.0` packages.
 - Tightened Auth DI guards to require Kernel Grid and Operation context accessors from `AddHoneyDrunkNode()` before Auth registration.
 - Reduced Auth runtime dependency coupling by consuming Kernel abstractions instead of the full Kernel runtime package where possible.
@@ -54,6 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+
+- Enabled ADR-0044 OpenClaw/Codex Grid Review Runner request generation for repository PRs.
 - Auth signing keys now use the provider-grouped `Jwt--SigningKeys` secret name.
 - Issuer, audience, and clock skew are documented as non-secret App Configuration values instead of Vault secrets.
 
@@ -71,6 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+
+- Enabled ADR-0044 OpenClaw/Codex Grid Review Runner request generation for repository PRs.
 - `BearerTokenAuthenticationProvider` now requires `IOptions<AuthOptions>` (constructor change)
 - `DefaultAuthorizationPolicy` now delegates to `AuthorizationPolicyEvaluator` (constructor change)
 - Updated HoneyDrunk.Kernel from 0.3.0 to 0.4.0

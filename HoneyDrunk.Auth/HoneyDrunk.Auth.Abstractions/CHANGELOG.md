@@ -9,12 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+
+- Enabled ADR-0044 OpenClaw/Codex Grid Review Runner request generation for repository PRs.
 - Refreshed HoneyDrunk.Standards to 0.2.9 for ADR-0047 testing tooling alignment.
 
 ## [0.5.0] - 2026-05-21
 
 ### Changed
 
+
+- Enabled ADR-0044 OpenClaw/Codex Grid Review Runner request generation for repository PRs.
 - Package version aligned with the Auth audit-emitter release.
 - No contract changes.
 
@@ -22,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+
+- Enabled ADR-0044 OpenClaw/Codex Grid Review Runner request generation for repository PRs.
 - Package version aligned with the Auth Kernel/Vault dependency refresh.
 - No contract changes.
 
@@ -29,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+
+- Enabled ADR-0044 OpenClaw/Codex Grid Review Runner request generation for repository PRs.
 - Package version aligned with the ADR-0005/0006 Auth bootstrap release.
 - No contract changes.
 
@@ -42,6 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+
+- Enabled ADR-0044 OpenClaw/Codex Grid Review Runner request generation for repository PRs.
 - Clarified `InternalError` XML doc as "unexpected internal error"
 
 ## [0.1.0] - 2025-12-12

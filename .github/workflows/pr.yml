@@ -16,6 +16,7 @@ jobs:
     permissions:
       contents: read
       checks: write
+      issues: write
       pull-requests: write
       security-events: write  # CodeQL SARIF upload
     uses: HoneyDrunkStudios/HoneyDrunk.Actions/.github/workflows/pr-core.yml@main
@@ -40,6 +41,7 @@ jobs:
     permissions:
       contents: write
       checks: write
+      issues: write
     uses: HoneyDrunkStudios/HoneyDrunk.Actions/.github/workflows/coverage-baseline-ratchet.yml@main
     with:
       dotnet-version: '10.0.x'
