@@ -9,16 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-
-- Enabled ADR-0044 OpenClaw/Codex Grid Review Runner request generation for repository PRs.
 - Refreshed HoneyDrunk.Standards to 0.2.9 for ADR-0047 testing tooling alignment.
 
 ## [0.5.0] - 2026-05-21
 
 ### Changed
 
-
-- Enabled ADR-0044 OpenClaw/Codex Grid Review Runner request generation for repository PRs.
 - Package version aligned with Auth `0.5.0` audit-emitter release.
 - No ASP.NET Core contract changes.
 
@@ -26,8 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-
-- Enabled ADR-0044 OpenClaw/Codex Grid Review Runner request generation for repository PRs.
 - Updated HoneyDrunk.Vault.EventGrid dependency to `0.5.0`.
 - Removed unused direct Kernel runtime dependency; ASP.NET Core integration continues to compose through Auth runtime and Vault Event Grid.
 
@@ -42,8 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-
-- Enabled ADR-0044 OpenClaw/Codex Grid Review Runner request generation for repository PRs.
 - Updated HoneyDrunk.Kernel from 0.3.0 to 0.4.0 for scope-based GridContext support
 
 ### Fixed
