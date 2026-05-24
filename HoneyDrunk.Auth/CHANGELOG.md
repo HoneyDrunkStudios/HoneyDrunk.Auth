@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Internal
 
+- Enabled ADR-0044 OpenClaw/Codex Grid Review Runner request generation for repository PRs.
 - Adopted HoneyDrunk.Standards.Tests 0.2.9 for Auth tests and refreshed HoneyDrunk.Standards to 0.2.9 across package projects for ADR-0047 testing alignment.
 - Backfilled Auth test coverage above the Grid PR coverage gate floor and seeded the coverage baseline ratchet artifact.
 
