@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Internal
 
+- Onboarded Auth to SonarQube Cloud (ADR-0011 D11). Added `sonar-project.properties` at the inner project subdir and wired a `sonarcloud` job in `pr.yml` that calls `HoneyDrunk.Actions/.github/workflows/job-sonarcloud.yml` after `pr-core`. Sources cover runtime + Abstractions + AspNetCore integration; tests cover both `HoneyDrunk.Auth.Tests` and the `HoneyDrunk.Auth.Canary` cross-Node verification project. Branch-protection requirement added separately after the first successful run lands.
 - Enabled ADR-0044 OpenClaw/Codex Grid Review Runner request generation for repository PRs.
 - Adopted HoneyDrunk.Standards.Tests 0.2.9 for Auth tests and refreshed HoneyDrunk.Standards to 0.2.9 across package projects for ADR-0047 testing alignment.
 - Backfilled Auth test coverage above the Grid PR coverage gate floor and seeded the coverage baseline ratchet artifact.
