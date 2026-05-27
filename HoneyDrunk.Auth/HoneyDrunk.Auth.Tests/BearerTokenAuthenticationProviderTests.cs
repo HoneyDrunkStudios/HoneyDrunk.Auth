@@ -319,7 +319,7 @@ public sealed class BearerTokenAuthenticationProviderTests
         var context = entry.Metadata?["context"];
         Assert.NotNull(context);
         Assert.True(Encoding.UTF8.GetByteCount(context) <= 4096);
-        Assert.DoesNotContain("�", context, StringComparison.Ordinal);
+        Assert.DoesNotContain("\uFFFD", context, StringComparison.Ordinal);
         Assert.EndsWith("...[truncated]", context, StringComparison.Ordinal);
         Assert.DoesNotContain(token, context, StringComparison.Ordinal);
         Assert.DoesNotContain("do-not-record", context, StringComparison.Ordinal);

@@ -7,11 +7,11 @@ namespace HoneyDrunk.Auth.Authentication;
 /// authentication failures along with the originating <see cref="AuthenticationFailureCode"/>.
 /// </summary>
 /// <remarks>
-/// Initializes a new instance of the <see cref="AuthenticationException"/> class.
+/// Initializes a new instance of the <see cref="BearerAuthenticationException"/> class.
 /// </remarks>
 /// <param name="failureCode">The failure code that caused the exception.</param>
 /// <param name="message">A human-readable failure message.</param>
-public sealed class AuthenticationException(AuthenticationFailureCode failureCode, string message) : Exception(message)
+public sealed class BearerAuthenticationException(AuthenticationFailureCode failureCode, string message) : Exception(message)
 {
     /// <summary>
     /// Gets the failure code that caused the exception.

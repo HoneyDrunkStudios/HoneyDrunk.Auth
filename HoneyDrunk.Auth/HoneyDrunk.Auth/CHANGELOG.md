@@ -12,19 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed (breaking)
 
 - **`AuthorizationPolicyEvaluator` is now a `static class`** (was `sealed class` with only static members; Sonar S1118). Direct `new AuthorizationPolicyEvaluator()` invocations no longer compile, but the type had no instance members and was never meant to be instantiated.
-- **`AuthenticationException` is now a public top-level type** in `HoneyDrunk.Auth.Authentication` (was a private nested class on `BearerTokenAuthenticationProvider`; Sonar S3871). Consumers that caught the previous nested form must update the cref.
+- **`BearerAuthenticationException` is now a public top-level type** in `HoneyDrunk.Auth.Authentication` (was a private nested class named `AuthenticationException` on `BearerTokenAuthenticationProvider`; Sonar S3871). Renamed from `AuthenticationException` to avoid the ambiguous-import collision with the BCL's `System.Security.Authentication.AuthenticationException`. Catchers of the previous nested form must update the cref and the type name.
 
 ### Changed
 
 - `BearerTokenAuthenticationProvider.ValidateTokenAsync` split into `LoadValidationConfigurationAsync`, `BuildValidationParameters`, `TryResolveSignatureFailureAsync`, and `BuildIdentityResult` helpers — cognitive complexity 20 → under 15 (Sonar S3776).
 - `AuthHealthContributor.CheckHealthAsync` and `AuthReadinessContributor.CheckReadinessAsync` default the `CancellationToken` parameter to `default` to match the `IHealthContributor` / `IReadinessContributor` interface declarations (Sonar S1006).
-- `VaultSigningKeyProvider.SigningKeyInfoDto` properties switched from `private set` to `init` accessors — JsonSerializer.Deserialize still populates them; later mutation was never required (Sonar S2376 / S3459).
+- `VaultSigningKeyProvider.SigningKeyInfoDto` is now a positional record (was a class with `private set` auto-properties). Sonar S2376 / S3459 kept flagging the `init` form as "unused setter / unassigned" because JsonSerializer's reflection-based binding isn't visible to the analyzer; the positional-record shape makes the assignment explicit. System.Text.Json supports record primary-ctor binding since .NET 6.
 - `BearerTokenAuthenticationProvider.GetAllowedAuditClaims` / `TryReadAllowedClaims` return `Dictionary<string, string>` instead of `IReadOnlyDictionary<string, string>` (Sonar IDE0306 / S6605 — these are private helpers, internal-only caller surface).
 - Refreshed HoneyDrunk.Standards to 0.2.9 for ADR-0047 testing tooling alignment.
 
 ### Internal
 
-- Bumped `HoneyDrunk.Vault` / `HoneyDrunk.Vault.Providers.AppConfiguration` / `HoneyDrunk.Vault.Providers.AzureKeyVault` `0.5.0 → 0.7.0` (Vault's 0.6.0 SonarCloud onboarding + 0.7.0 DIM promotion). Auth only consumes ISecretStore via the bootstrap extensions; no surface affected.
+- Bumped `HoneyDrunk.Vault` / `HoneyDrunk.Vault.Providers.AppConfiguration` / `HoneyDrunk.Vault.Providers.AzureKeyVault` `0.5.0 → 0.7.0` (Vault's 0.6.0 SonarCloud onboarding + 0.7.0 DIM promotion). Auth's public surface includes `VaultSigningKeyProvider(ISecretStore secretStore, ...)`, so `HoneyDrunk.Vault.Abstractions.ISecretStore` is in Auth's transitive public surface — but Vault 0.7.0's `ISecretStore` shape is unchanged from 0.5.0 for the methods Auth uses (`TryGetSecretAsync` became a default interface method, source-compatible for all callers; `ISecretProvider` now extends `ISecretStore` which Auth doesn't implement). So the bump is a transitive dep refresh with no breaking interaction with Auth's surface, even though that surface is non-empty.
 - Bumped `HoneyDrunk.Kernel.Abstractions` `0.7.0 → 0.8.0`.
 - Bumped `Microsoft.Extensions.Configuration.Binder` `10.0.6 → 10.0.8` and `Microsoft.IdentityModel.JsonWebTokens` `8.17.0 → 8.18.0`.
 

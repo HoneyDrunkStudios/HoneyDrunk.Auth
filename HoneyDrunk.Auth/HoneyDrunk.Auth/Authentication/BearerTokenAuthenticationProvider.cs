@@ -79,7 +79,7 @@ public sealed class BearerTokenAuthenticationProvider(
         {
             throw;
         }
-        catch (AuthenticationException ex)
+        catch (BearerAuthenticationException ex)
         {
             // Rethrow known authentication exceptions with proper codes
             var failure = RecordFailure(activity, ex.FailureCode, ex.Message);
@@ -375,25 +375,25 @@ public sealed class BearerTokenAuthenticationProvider(
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogError(ex, "Failed to retrieve authentication configuration from Vault");
-            throw new AuthenticationException(AuthenticationFailureCode.VaultUnavailable, "Authentication service temporarily unavailable");
+            throw new BearerAuthenticationException(AuthenticationFailureCode.VaultUnavailable, "Authentication service temporarily unavailable");
         }
 
         if (signingKeys.Count == 0)
         {
             _logger.LogError("No signing keys available for token validation");
-            throw new AuthenticationException(AuthenticationFailureCode.ConfigurationError, "Authentication service is misconfigured");
+            throw new BearerAuthenticationException(AuthenticationFailureCode.ConfigurationError, "Authentication service is misconfigured");
         }
 
         if (string.IsNullOrWhiteSpace(issuer))
         {
             _logger.LogError("Issuer is not configured");
-            throw new AuthenticationException(AuthenticationFailureCode.ConfigurationError, "Authentication service is misconfigured");
+            throw new BearerAuthenticationException(AuthenticationFailureCode.ConfigurationError, "Authentication service is misconfigured");
         }
 
         if (string.IsNullOrWhiteSpace(audience))
         {
             _logger.LogError("Audience is not configured");
-            throw new AuthenticationException(AuthenticationFailureCode.ConfigurationError, "Authentication service is misconfigured");
+            throw new BearerAuthenticationException(AuthenticationFailureCode.ConfigurationError, "Authentication service is misconfigured");
         }
 
         return new ValidationConfiguration(signingKeys, issuer, audience, clockSkew);

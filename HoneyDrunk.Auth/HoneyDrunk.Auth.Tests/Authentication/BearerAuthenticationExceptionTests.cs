@@ -4,9 +4,9 @@ using HoneyDrunk.Auth.Authentication;
 namespace HoneyDrunk.Auth.Tests.Authentication;
 
 /// <summary>
-/// Tests for <see cref="AuthenticationException"/>.
+/// Tests for <see cref="BearerAuthenticationException"/>.
 /// </summary>
-public sealed class AuthenticationExceptionTests
+public sealed class BearerAuthenticationExceptionTests
 {
     /// <summary>
     /// Constructor captures the failure code and message.
@@ -14,7 +14,7 @@ public sealed class AuthenticationExceptionTests
     [Fact]
     public void Constructor_StoresFailureCodeAndMessage()
     {
-        var exception = new AuthenticationException(AuthenticationFailureCode.VaultUnavailable, "Vault is down");
+        var exception = new BearerAuthenticationException(AuthenticationFailureCode.VaultUnavailable, "Vault is down");
 
         Assert.Equal(AuthenticationFailureCode.VaultUnavailable, exception.FailureCode);
         Assert.Equal("Vault is down", exception.Message);
@@ -27,9 +27,9 @@ public sealed class AuthenticationExceptionTests
     public void Throw_PreservesFailureCode()
     {
         static void Thrower() =>
-            throw new AuthenticationException(AuthenticationFailureCode.ConfigurationError, "missing key");
+            throw new BearerAuthenticationException(AuthenticationFailureCode.ConfigurationError, "missing key");
 
-        var caught = Assert.Throws<AuthenticationException>(Thrower);
+        var caught = Assert.Throws<BearerAuthenticationException>(Thrower);
 
         Assert.Equal(AuthenticationFailureCode.ConfigurationError, caught.FailureCode);
     }

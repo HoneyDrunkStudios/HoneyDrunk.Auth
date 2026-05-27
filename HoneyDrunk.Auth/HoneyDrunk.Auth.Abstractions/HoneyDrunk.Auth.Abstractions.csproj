@@ -11,7 +11,7 @@
     <Version>0.6.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>Core abstractions and contracts for HoneyDrunk.Auth. Provides authentication and authorization interfaces including IAuthenticationProvider, IAuthorizationPolicy, AuthenticatedIdentity, and AuthorizationDecision types.</Description>
-    <PackageReleaseNotes>v0.5.0: Package version aligned with Auth audit-emitter release. No contract changes.</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.6.0: Package version aligned with the HoneyDrunk.Auth 0.6.0 Sonar follow-up release (ADR-0011 D11). No contract changes. See CHANGELOG.md for details.</PackageReleaseNotes>
     <PackageTags>authentication;authorization;jwt;security;abstractions;identity;claims;policy</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>

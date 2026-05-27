@@ -19,17 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed (breaking)
 
 - **`AuthorizationPolicyEvaluator` is now a `static class`** (was `sealed`; Sonar S1118). The class only ever had a static `Evaluate` method, so this is a shape correction rather than a behavioral break — but `new AuthorizationPolicyEvaluator()` no longer compiles.
-- **`AuthenticationException` is now a public top-level type** in `HoneyDrunk.Auth.Authentication` (was nested-private on `BearerTokenAuthenticationProvider`; Sonar S3871). Catchers must update.
+- **`BearerAuthenticationException` is now a public top-level type** in `HoneyDrunk.Auth.Authentication` (was nested-private on `BearerTokenAuthenticationProvider`, formerly named `AuthenticationException`; Sonar S3871). Renamed from `AuthenticationException` to avoid an ambiguous-import collision with the BCL's `System.Security.Authentication.AuthenticationException`. Catchers must update both the cref and the type name.
 - **Package versions bumped** to `HoneyDrunk.Auth* 0.6.0` per pre-1.0 semver (`0.x.0 → 0.(x+1).0` for breaks — the dep bumps below are also transitively breaking).
 
 ### Changed
 
 - `BearerTokenAuthenticationProvider.ValidateTokenAsync` split into `LoadValidationConfigurationAsync`, `BuildValidationParameters`, `TryResolveSignatureFailureAsync`, and `BuildIdentityResult` helpers (Sonar S3776 — cognitive complexity 20 → under 15).
 - `AuthHealthContributor.CheckHealthAsync` and `AuthReadinessContributor.CheckReadinessAsync` default the `CancellationToken` parameter to `default` (Sonar S1006).
-- `VaultSigningKeyProvider.SigningKeyInfoDto` properties switched from `private set` to `init` accessors (Sonar S2376 / S3459).
+- `VaultSigningKeyProvider.SigningKeyInfoDto` is now a positional record (was a class with `private set` auto-properties — `init` form still tripped Sonar S2376 / S3459 because JsonSerializer's reflection-based binding isn't visible to the analyzer; positional record makes the assignment explicit).
 - `BearerTokenAuthenticationProvider.GetAllowedAuditClaims` / `TryReadAllowedClaims` return `Dictionary<string, string>` instead of `IReadOnlyDictionary<string, string>` (IDE0306 / S6605 — private helpers).
 - Canary fakes renamed `tags → additionalTags` (telemetry factories) and `secretPath → secretName` (stub secret store) to match the interface declarations (Sonar S927).
-- Canary `NullLoggerProvider.NullLogger` nested class renamed to `InnerNullLogger` to stop shadowing the outer type's `Instance` (Sonar S3604).
+- Canary `NullLoggerProvider.NullLogger` nested class renamed to `InnerNullLogger` AND its `Instance` property renamed to `Singleton` so the inner property no longer shadows the outer type's `Instance` (Sonar S3604 — class rename alone was not enough, the property collision was the actual finding).
 - Canary `ToggleableSigningKeyProvider` extracts the `"Vault unavailable (simulated)"` literal to a `VaultUnavailableMessage` const (Sonar S1192).
 - Canary `TokenMinter.GenerateKey` switched from `Random.Shared.NextBytes` to `RandomNumberGenerator.GetBytes(32)` (Sonar S2245 / S6781). Subject literal extracted to `DefaultSubject` const (S1192).
 - Canary `Check8_PolicyNotFoundDistinguishable` drops the `policyNotFound == genericDeny` and `(int)policyNotFound != 8` checks — Sonar correctly proves both always-false at compile time of the canary; the round-trip-through-AuthorizationDecision check is retained and the enum identity invariant is covered separately by HoneyDrunk.Auth.Tests.
@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Internal
 
-- Bumped `HoneyDrunk.Vault` / `Providers.AppConfiguration` / `Providers.AzureKeyVault` / `EventGrid` `0.5.0 → 0.7.0` (Vault's 0.6.0 SonarCloud onboarding + 0.7.0 DIM promotion — Auth only consumes ISecretStore via the bootstrap extensions; no surface affected).
+- Bumped `HoneyDrunk.Vault` / `Providers.AppConfiguration` / `Providers.AzureKeyVault` / `EventGrid` `0.5.0 → 0.7.0` (Vault's 0.6.0 SonarCloud onboarding + 0.7.0 DIM promotion). Auth's public surface includes `VaultSigningKeyProvider(ISecretStore secretStore, ...)`, so `HoneyDrunk.Vault.Abstractions.ISecretStore` is in Auth's transitive public surface — but Vault 0.7.0's `ISecretStore` shape stays source-compatible for the methods Auth actually uses (`TryGetSecretAsync` became a default interface method; `ISecretProvider` now extends `ISecretStore` which Auth doesn't implement). So the bump is a transitive refresh with no breaking interaction with Auth's surface.
 - Bumped `HoneyDrunk.Kernel.Abstractions` `0.7.0 → 0.8.0`.
 - Bumped `Microsoft.Extensions.Configuration` / `Configuration.Binder` `10.0.6 → 10.0.8`, `Microsoft.AspNetCore.TestHost` `10.0.5 → 10.0.8`, `Microsoft.IdentityModel.JsonWebTokens` `8.17.0 → 8.18.0`.
 - Two Sonar S1199 ("Extract this nested code block into a separate method") findings on the Test 4a / Test 4b scope blocks in `Program.cs` remain — the canary is a top-level Program and static local functions cannot reference the other top-level helpers (CS8422), so the analyzer suggestion does not apply cleanly. Documented in-line.

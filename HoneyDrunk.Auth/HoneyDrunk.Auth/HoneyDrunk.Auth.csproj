@@ -12,7 +12,7 @@
     <Version>0.6.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>Authentication and authorization library for .NET. Provides JWT Bearer token validation, policy-based authorization, Vault-backed signing key management, and integration with HoneyDrunk.Kernel for Grid-aware context propagation.</Description>
-    <PackageReleaseNotes>v0.5.0: Added HoneyDrunk.Audit.Abstractions-backed security event emission for token validation and authorization decisions while preserving Auth validation-only boundaries.</PackageReleaseNotes>
+    <PackageReleaseNotes>v0.6.0: Sonar gate-cleanup (ADR-0011 D11). Promotes BearerAuthenticationException to a public top-level type; AuthorizationPolicyEvaluator is now a static class; BearerTokenAuthenticationProvider.ValidateTokenAsync split into helpers to drop cognitive complexity below 15; VaultSigningKeyProvider DTO uses positional record. Bumps HoneyDrunk.Vault* 0.5.0 &#8594; 0.7.0, HoneyDrunk.Kernel.Abstractions 0.7.0 &#8594; 0.8.0, Microsoft.Extensions.Configuration.Binder 10.0.6 &#8594; 10.0.8, Microsoft.IdentityModel.JsonWebTokens 8.17.0 &#8594; 8.18.0. See CHANGELOG.md for details.</PackageReleaseNotes>
     <PackageTags>authentication;authorization;jwt;bearer;security;identity;claims;policy;vault;kernel;grid</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
