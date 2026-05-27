@@ -1,33 +1,22 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace HoneyDrunk.Auth.Canary.Fakes;
 
 /// <summary>
-/// No-op logger provider for basic DI registration.
+/// No-op logger provider for basic DI registration. Delegates to
+/// <see cref="NullLogger.Instance"/> from Microsoft.Extensions.Logging.Abstractions
+/// — no need to roll our own inner ILogger (previous attempts ran into
+/// Sonar S3604 on shadowed Instance properties and S109 on the
+/// renamed-Singleton accessor).
 /// </summary>
 internal sealed class NullLoggerProvider : ILoggerProvider
 {
     public static NullLoggerProvider Instance { get; } = new();
 
-    public ILogger CreateLogger(string categoryName) => InnerNullLogger.Singleton;
+    public ILogger CreateLogger(string categoryName) => NullLogger.Instance;
 
     public void Dispose()
     {
-    }
-
-    // Singleton (not "Instance") so the inner property doesn't shadow the
-    // outer NullLoggerProvider.Instance (Sonar S3604).
-    private sealed class InnerNullLogger : ILogger
-    {
-        public static InnerNullLogger Singleton { get; } = new();
-
-        public IDisposable? BeginScope<TState>(TState state)
-            where TState : notnull => null;
-
-        public bool IsEnabled(LogLevel logLevel) => false;
-
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-        {
-        }
     }
 }
