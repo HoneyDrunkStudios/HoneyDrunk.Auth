@@ -131,7 +131,7 @@ public sealed class DefaultAuthorizationPolicyTests
         if (entry.Metadata?.TryGetValue("context", out var context) == true)
         {
             Assert.True(Encoding.UTF8.GetByteCount(context) <= 4096);
-            Assert.DoesNotContain("�", context, StringComparison.Ordinal);
+            Assert.DoesNotContain("\uFFFD", context, StringComparison.Ordinal);
         }
         else
         {

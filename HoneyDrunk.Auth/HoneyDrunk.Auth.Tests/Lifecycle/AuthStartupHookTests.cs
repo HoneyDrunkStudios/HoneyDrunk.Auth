@@ -43,8 +43,12 @@ public sealed class AuthStartupHookTests
             .AddKey("test-key", new byte[32]);
         var hook = new AuthStartupHook(keyProvider, Substitute.For<IAuditLog>(), NullLogger<AuthStartupHook>.Instance);
 
-        // Act & Assert - should not throw
-        await hook.ExecuteAsync(CancellationToken.None);
+        // Act — capture any exception via Record.ExceptionAsync so the "must not
+        // throw" property is asserted explicitly (Sonar S2699 blocker).
+        var exception = await Record.ExceptionAsync(() => hook.ExecuteAsync(CancellationToken.None));
+
+        // Assert
+        Assert.Null(exception);
     }
 
     /// <summary>

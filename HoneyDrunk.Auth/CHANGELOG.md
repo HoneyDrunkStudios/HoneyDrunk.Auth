@@ -14,12 +14,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-27
+
+### Changed (breaking)
+
+- **`AuthorizationPolicyEvaluator` is now a `static class`** (was `sealed`; Sonar S1118). The class only ever had a static `Evaluate` method, so this is a shape correction rather than a behavioral break — but `new AuthorizationPolicyEvaluator()` no longer compiles.
+- **`BearerAuthenticationException` is now a public top-level type** in `HoneyDrunk.Auth.Authentication` (was nested-private on `BearerTokenAuthenticationProvider`, formerly named `AuthenticationException`; Sonar S3871). Renamed from `AuthenticationException` to avoid an ambiguous-import collision with the BCL's `System.Security.Authentication.AuthenticationException`. Catchers must update both the cref and the type name.
+- **Package versions bumped** to `HoneyDrunk.Auth* 0.6.0` per pre-1.0 semver (`0.x.0 → 0.(x+1).0` for breaks — the dep bumps below are also transitively breaking).
+
+### Changed
+
+- `BearerTokenAuthenticationProvider.ValidateTokenAsync` split into `LoadValidationConfigurationAsync`, `BuildValidationParameters`, `TryResolveSignatureFailureAsync`, and `BuildIdentityResult` helpers (Sonar S3776 — cognitive complexity 20 → under 15).
+- `AuthHealthContributor.CheckHealthAsync` and `AuthReadinessContributor.CheckReadinessAsync` default the `CancellationToken` parameter to `default` (Sonar S1006).
+- `VaultSigningKeyProvider.SigningKeyInfoDto` is now a positional record (was a class with `private set` auto-properties — `init` form still tripped Sonar S2376 / S3459 because JsonSerializer's reflection-based binding isn't visible to the analyzer; positional record makes the assignment explicit).
+- `BearerTokenAuthenticationProvider.GetAllowedAuditClaims` / `TryReadAllowedClaims` return `Dictionary<string, string>` instead of `IReadOnlyDictionary<string, string>` (IDE0306 / S6605 — private helpers).
+- Canary fakes renamed `tags → additionalTags` (telemetry factories) and `secretPath → secretName` (stub secret store) to match the interface declarations (Sonar S927).
+- Canary `NullLoggerProvider`: dropped its bespoke nested `NullLogger` class and now delegates `CreateLogger` to `Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance` (clears Sonar S3604 — original inner `Instance` property shadowed the outer's — without re-introducing S109 logger-naming on a renamed inner accessor).
+- Canary `ToggleableSigningKeyProvider` extracts the `"Vault unavailable (simulated)"` literal to a `VaultUnavailableMessage` const (Sonar S1192).
+- Canary `TokenMinter.GenerateKey` switched from `Random.Shared.NextBytes` to `RandomNumberGenerator.GetBytes(32)` (Sonar S2245 / S6781). Subject literal extracted to `DefaultSubject` const (S1192).
+- Canary `Check8_PolicyNotFoundDistinguishable` drops the `policyNotFound == genericDeny` and `(int)policyNotFound != 8` checks — Sonar correctly proves both always-false at compile time of the canary; the round-trip-through-AuthorizationDecision check is retained and the enum identity invariant is covered separately by HoneyDrunk.Auth.Tests.
+- Test: `AuthStartupHookTests.ExecuteAsync_AllConfigValid_Succeeds` wraps the call in `Record.ExceptionAsync` and asserts `Assert.Null(exception)` so the "must not throw" property is captured explicitly (Sonar S2699 blocker).
+- Test: `CachingSigningKeyProviderTests.RecordingSigningKeyProvider._keys` switched to collection-expression form `[...]` (Sonar S6602).
+
 ### Internal
 
-- Onboarded Auth to SonarQube Cloud (ADR-0011 D11). Wired a `sonarcloud` job in `pr.yml` that calls `HoneyDrunkStudios/HoneyDrunk.Actions/.github/workflows/job-sonarcloud.yml` on both `pull_request` (after `pr-core` succeeds) and `push` to `main` (standalone). PR analysis gates the merge on new-code findings; main-branch analysis populates the SonarCloud Overview dashboard and the leak-period baseline. Per-project source/test classification is discovered automatically from MSBuild `IsTestProject` properties; per-repo Sonar overrides can be added later via `Directory.Build.props` `<SonarQubeSetting>` items or as new inputs to `job-sonarcloud.yml`. Branch-protection requirement added separately after the first successful run lands.
-- Enabled ADR-0044 OpenClaw/Codex Grid Review Runner request generation for repository PRs.
-- Adopted HoneyDrunk.Standards.Tests 0.2.9 for Auth tests and refreshed HoneyDrunk.Standards to 0.2.9 across package projects for ADR-0047 testing alignment.
-- Backfilled Auth test coverage above the Grid PR coverage gate floor and seeded the coverage baseline ratchet artifact.
+- Bumped `HoneyDrunk.Vault` / `Providers.AppConfiguration` / `Providers.AzureKeyVault` / `EventGrid` `0.5.0 → 0.7.0` (Vault's 0.6.0 SonarCloud onboarding + 0.7.0 DIM promotion). Auth's public surface includes `VaultSigningKeyProvider(ISecretStore secretStore, ...)`, so `HoneyDrunk.Vault.Abstractions.ISecretStore` is in Auth's transitive public surface — but Vault 0.7.0's `ISecretStore` shape stays source-compatible for the methods Auth actually uses (`TryGetSecretAsync` became a default interface method; `ISecretProvider` now extends `ISecretStore` which Auth doesn't implement). So the bump is a transitive refresh with no breaking interaction with Auth's surface.
+- Bumped `HoneyDrunk.Kernel.Abstractions` `0.7.0 → 0.8.0`.
+- Bumped `Microsoft.Extensions.Configuration` / `Configuration.Binder` `10.0.6 → 10.0.8`, `Microsoft.AspNetCore.TestHost` `10.0.5 → 10.0.8`, `Microsoft.IdentityModel.JsonWebTokens` `8.17.0 → 8.18.0`.
+- Two Sonar S1199 ("Extract this nested code block into a separate method") findings on the Test 4a / Test 4b scope blocks in `Program.cs` remain — the canary is a top-level Program and static local functions cannot reference the other top-level helpers (CS8422), so the analyzer suggestion does not apply cleanly. Documented in-line.
 
 ## [0.5.0] - 2026-05-21
 

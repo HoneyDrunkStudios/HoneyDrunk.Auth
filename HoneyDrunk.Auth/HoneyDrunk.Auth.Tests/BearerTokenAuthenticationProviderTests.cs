@@ -1,6 +1,7 @@
 using HoneyDrunk.Audit.Abstractions;
 using HoneyDrunk.Auth.Abstractions;
 using HoneyDrunk.Auth.Authentication;
+using HoneyDrunk.Auth.Secrets;
 using HoneyDrunk.Auth.Tests.Helpers;
 using HoneyDrunk.Kernel.Abstractions.Context;
 using HoneyDrunk.Kernel.Abstractions.Identity;
@@ -318,7 +319,7 @@ public sealed class BearerTokenAuthenticationProviderTests
         var context = entry.Metadata?["context"];
         Assert.NotNull(context);
         Assert.True(Encoding.UTF8.GetByteCount(context) <= 4096);
-        Assert.DoesNotContain("�", context, StringComparison.Ordinal);
+        Assert.DoesNotContain("\uFFFD", context, StringComparison.Ordinal);
         Assert.EndsWith("...[truncated]", context, StringComparison.Ordinal);
         Assert.DoesNotContain(token, context, StringComparison.Ordinal);
         Assert.DoesNotContain("do-not-record", context, StringComparison.Ordinal);
@@ -420,5 +421,165 @@ public sealed class BearerTokenAuthenticationProviderTests
 
         // Assert
         Assert.True(result.IsAuthenticated);
+    }
+
+    /// <summary>
+    /// Tests that an empty key set surfaces as ConfigurationError (covers the
+    /// LoadValidationConfigurationAsync misconfiguration branch).
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task AuthenticateAsync_NoSigningKeys_ReturnsConfigurationError()
+    {
+        // Arrange - key provider has issuer/audience but no keys
+        var emptyKeyProvider = new InMemorySigningKeyProvider();
+        var provider = BuildProvider(emptyKeyProvider);
+
+        // Act
+        var result = await provider.AuthenticateAsync(AuthCredential.Bearer("any-token"));
+
+        // Assert
+        Assert.False(result.IsAuthenticated);
+        Assert.Equal(AuthenticationFailureCode.ConfigurationError, result.FailureCode);
+    }
+
+    /// <summary>
+    /// Tests that an empty issuer surfaces as ConfigurationError.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task AuthenticateAsync_EmptyIssuer_ReturnsConfigurationError()
+    {
+        // Arrange
+        var key = TestTokenGenerator.GenerateKey();
+        var keyProvider = new InMemorySigningKeyProvider()
+            .WithIssuer(string.Empty)
+            .AddKey(key.KeyId!, key.Key);
+        var provider = BuildProvider(keyProvider);
+
+        // Act
+        var result = await provider.AuthenticateAsync(AuthCredential.Bearer("any-token"));
+
+        // Assert
+        Assert.False(result.IsAuthenticated);
+        Assert.Equal(AuthenticationFailureCode.ConfigurationError, result.FailureCode);
+    }
+
+    /// <summary>
+    /// Tests that an empty audience surfaces as ConfigurationError.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task AuthenticateAsync_EmptyAudience_ReturnsConfigurationError()
+    {
+        // Arrange
+        var key = TestTokenGenerator.GenerateKey();
+        var keyProvider = new InMemorySigningKeyProvider()
+            .WithAudience(string.Empty)
+            .AddKey(key.KeyId!, key.Key);
+        var provider = BuildProvider(keyProvider);
+
+        // Act
+        var result = await provider.AuthenticateAsync(AuthCredential.Bearer("any-token"));
+
+        // Assert
+        Assert.False(result.IsAuthenticated);
+        Assert.Equal(AuthenticationFailureCode.ConfigurationError, result.FailureCode);
+    }
+
+    /// <summary>
+    /// Tests that a key-provider exception surfaces as VaultUnavailable (covers
+    /// the LoadValidationConfigurationAsync catch path).
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task AuthenticateAsync_KeyProviderThrows_ReturnsVaultUnavailable()
+    {
+        // Arrange
+        var keyProvider = Substitute.For<ISigningKeyProvider>();
+        keyProvider.GetSigningKeysAsync(Arg.Any<CancellationToken>())
+            .Returns<Task<IReadOnlyList<Microsoft.IdentityModel.Tokens.SecurityKey>>>(
+                _ => throw new InvalidOperationException("Vault unreachable"));
+        var provider = BuildProvider(keyProvider);
+
+        // Act
+        var result = await provider.AuthenticateAsync(AuthCredential.Bearer("any-token"));
+
+        // Assert
+        Assert.False(result.IsAuthenticated);
+        Assert.Equal(AuthenticationFailureCode.VaultUnavailable, result.FailureCode);
+    }
+
+    /// <summary>
+    /// Caching provider path: token signed with a kid that's missing from the cache
+    /// at validate-time but present in the underlying provider — the refresh succeeds
+    /// and the retry validates. Covers the success leg of
+    /// TryResolveSignatureFailureAsync.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task AuthenticateAsync_CachingProviderRefreshesAndRetries_WhenKidUnknownButResolvable()
+    {
+        // Arrange: inner has only the old key; caching layer initialises with that snapshot.
+        var oldKey = TestTokenGenerator.GenerateKey("old-kid");
+        var inner = new InMemorySigningKeyProvider().AddKey(oldKey.KeyId!, oldKey.Key);
+        var caching = new CachingSigningKeyProvider(inner, Options.Create(new AuthOptions()), NullLogger<CachingSigningKeyProvider>.Instance);
+
+        // Warm the cache, then add a new key to the inner provider.
+        _ = await caching.GetSigningKeysAsync();
+        var newKey = TestTokenGenerator.GenerateKey("new-kid");
+        inner.AddKey(newKey.KeyId!, newKey.Key);
+
+        var provider = BuildProvider(caching);
+        var token = TestTokenGenerator.GenerateToken(newKey);
+
+        // Act: first validation fails (cache doesn't yet know new-kid); caching layer
+        // refreshes (TryRefreshForUnknownKeyIdAsync returns true); retry succeeds.
+        var result = await provider.AuthenticateAsync(AuthCredential.Bearer(token));
+
+        // Assert
+        Assert.True(result.IsAuthenticated);
+    }
+
+    /// <summary>
+    /// Caching provider path: token signed with a kid that is missing from both the
+    /// cache and the underlying provider — refresh returns false, the failure
+    /// propagates as InvalidSignature. Covers the !TryRefreshForUnknownKeyIdAsync
+    /// branch.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task AuthenticateAsync_CachingProviderRefreshFails_WhenKidNotInProvider()
+    {
+        var oldKey = TestTokenGenerator.GenerateKey("old-kid");
+        var inner = new InMemorySigningKeyProvider().AddKey(oldKey.KeyId!, oldKey.Key);
+        var caching = new CachingSigningKeyProvider(inner, Options.Create(new AuthOptions()), NullLogger<CachingSigningKeyProvider>.Instance);
+        _ = await caching.GetSigningKeysAsync();
+
+        var fakeKey = TestTokenGenerator.GenerateKey("fake-kid");
+        var provider = BuildProvider(caching);
+        var token = TestTokenGenerator.GenerateToken(fakeKey);
+
+        var result = await provider.AuthenticateAsync(AuthCredential.Bearer(token));
+
+        Assert.False(result.IsAuthenticated);
+        Assert.Equal(AuthenticationFailureCode.InvalidSignature, result.FailureCode);
+    }
+
+    private BearerTokenAuthenticationProvider BuildProvider(ISigningKeyProvider keyProvider)
+    {
+        var gridContext = Substitute.For<IGridContext>();
+        gridContext.TenantId.Returns(TenantId.Internal);
+        gridContext.CorrelationId.Returns("corr-test");
+        var gridContextAccessor = Substitute.For<IGridContextAccessor>();
+        gridContextAccessor.GridContext.Returns(gridContext);
+
+        return new BearerTokenAuthenticationProvider(
+            keyProvider,
+            Options.Create(new AuthOptions()),
+            _telemetryFactory,
+            _auditLog,
+            gridContextAccessor,
+            NullLogger<BearerTokenAuthenticationProvider>.Instance);
     }
 }

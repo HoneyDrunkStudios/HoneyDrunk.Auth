@@ -1,6 +1,7 @@
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
+using System.Security.Cryptography;
 
 namespace HoneyDrunk.Auth.Canary.Helpers;
 
@@ -11,14 +12,17 @@ internal static class TokenMinter
 {
     public const string DefaultIssuer = "https://canary.honeydrunk.io";
     public const string DefaultAudience = "api://canary";
+    public const string DefaultSubject = "user-123";
 
     /// <summary>
-    /// Generates a new symmetric signing key.
+    /// Generates a new symmetric signing key. Uses a cryptographic RNG
+    /// (RandomNumberGenerator) rather than the non-cryptographic Random.Shared
+    /// per Sonar S2245 / S6781 — even though this is canary-only code, the
+    /// shape matters for the rule.
     /// </summary>
     public static SymmetricSecurityKey GenerateKey(string keyId = "canary-key-1")
     {
-        var keyBytes = new byte[32];
-        Random.Shared.NextBytes(keyBytes);
+        var keyBytes = RandomNumberGenerator.GetBytes(32);
         return new SymmetricSecurityKey(keyBytes) { KeyId = keyId };
     }
 
@@ -27,7 +31,7 @@ internal static class TokenMinter
     /// </summary>
     public static string MintValid(
         SymmetricSecurityKey key,
-        string subject = "user-123",
+        string subject = DefaultSubject,
         string? name = "Canary User",
         IEnumerable<Claim>? additionalClaims = null,
         string issuer = DefaultIssuer,
@@ -76,7 +80,7 @@ internal static class TokenMinter
     public static string MintMissingClaim(
         SymmetricSecurityKey key,
         string missingClaimName,
-        string subject = "user-123",
+        string subject = DefaultSubject,
         string issuer = DefaultIssuer,
         string audience = DefaultAudience)
 #pragma warning restore IDE0060
@@ -91,7 +95,7 @@ internal static class TokenMinter
     /// </summary>
     public static string MintExpired(
         SymmetricSecurityKey key,
-        string subject = "user-123",
+        string subject = DefaultSubject,
         string issuer = DefaultIssuer,
         string audience = DefaultAudience)
     {
@@ -110,7 +114,7 @@ internal static class TokenMinter
     /// </summary>
     public static (string token, SymmetricSecurityKey key) MintWithUnknownKid(
         string unknownKid,
-        string subject = "user-123",
+        string subject = DefaultSubject,
         string issuer = DefaultIssuer,
         string audience = DefaultAudience)
     {
@@ -124,7 +128,7 @@ internal static class TokenMinter
     /// Mints a token with an invalid signature (signed by a different key than provided).
     /// </summary>
     public static string MintInvalidSignature(
-        string subject = "user-123",
+        string subject = DefaultSubject,
         string issuer = DefaultIssuer,
         string audience = DefaultAudience)
     {

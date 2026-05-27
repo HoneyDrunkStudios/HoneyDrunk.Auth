@@ -11,12 +11,12 @@ internal sealed class NoOpTelemetryActivityFactory : ITelemetryActivityFactory
 {
     public static NoOpTelemetryActivityFactory Instance { get; } = new();
 
-    public Activity? Start(string name, IReadOnlyDictionary<string, object?>? tags = null)
+    public Activity? Start(string name, IReadOnlyDictionary<string, object?>? additionalTags = null)
     {
         return null;
     }
 
-    public Activity? StartExplicit(string name, IGridContext gridContext, IOperationContext? operationContext = null, IReadOnlyDictionary<string, object?>? tags = null)
+    public Activity? StartExplicit(string name, IGridContext gridContext, IOperationContext? operationContext = null, IReadOnlyDictionary<string, object?>? additionalTags = null)
     {
         return null;
     }
