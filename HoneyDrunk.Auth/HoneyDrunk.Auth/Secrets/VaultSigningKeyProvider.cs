@@ -127,18 +127,20 @@ public sealed class VaultSigningKeyProvider(
     }
 
     /// <summary>
-    /// DTO for deserializing signing key JSON from Vault.
+    /// DTO for deserializing signing key JSON from Vault. Properties use init
+    /// accessors — JsonSerializer.Deserialize sets them once at construction;
+    /// no later mutation is required (Sonar S2376 / S3459).
     /// </summary>
 #pragma warning disable CA1812 // Class is instantiated by JsonSerializer.Deserialize
     private sealed class SigningKeyInfoDto
     {
-        public string? Kid { get; set; }
+        public string? Kid { get; init; }
 
-        public string? Alg { get; set; }
+        public string? Alg { get; init; }
 
-        public string? Key { get; set; }
+        public string? Key { get; init; }
 
-        public bool? Active { get; set; }
+        public bool? Active { get; init; }
     }
 #pragma warning restore CA1812
 }

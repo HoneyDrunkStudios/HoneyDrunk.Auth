@@ -7,9 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-27
+
+### Changed (breaking)
+
+- **`AuthorizationPolicyEvaluator` is now a `static class`** (was `sealed class` with only static members; Sonar S1118). Direct `new AuthorizationPolicyEvaluator()` invocations no longer compile, but the type had no instance members and was never meant to be instantiated.
+- **`AuthenticationException` is now a public top-level type** in `HoneyDrunk.Auth.Authentication` (was a private nested class on `BearerTokenAuthenticationProvider`; Sonar S3871). Consumers that caught the previous nested form must update the cref.
+
 ### Changed
 
+- `BearerTokenAuthenticationProvider.ValidateTokenAsync` split into `LoadValidationConfigurationAsync`, `BuildValidationParameters`, `TryResolveSignatureFailureAsync`, and `BuildIdentityResult` helpers — cognitive complexity 20 → under 15 (Sonar S3776).
+- `AuthHealthContributor.CheckHealthAsync` and `AuthReadinessContributor.CheckReadinessAsync` default the `CancellationToken` parameter to `default` to match the `IHealthContributor` / `IReadinessContributor` interface declarations (Sonar S1006).
+- `VaultSigningKeyProvider.SigningKeyInfoDto` properties switched from `private set` to `init` accessors — JsonSerializer.Deserialize still populates them; later mutation was never required (Sonar S2376 / S3459).
+- `BearerTokenAuthenticationProvider.GetAllowedAuditClaims` / `TryReadAllowedClaims` return `Dictionary<string, string>` instead of `IReadOnlyDictionary<string, string>` (Sonar IDE0306 / S6605 — these are private helpers, internal-only caller surface).
 - Refreshed HoneyDrunk.Standards to 0.2.9 for ADR-0047 testing tooling alignment.
+
+### Internal
+
+- Bumped `HoneyDrunk.Vault` / `HoneyDrunk.Vault.Providers.AppConfiguration` / `HoneyDrunk.Vault.Providers.AzureKeyVault` `0.5.0 → 0.7.0` (Vault's 0.6.0 SonarCloud onboarding + 0.7.0 DIM promotion). Auth only consumes ISecretStore via the bootstrap extensions; no surface affected.
+- Bumped `HoneyDrunk.Kernel.Abstractions` `0.7.0 → 0.8.0`.
+- Bumped `Microsoft.Extensions.Configuration.Binder` `10.0.6 → 10.0.8` and `Microsoft.IdentityModel.JsonWebTokens` `8.17.0 → 8.18.0`.
 
 ## [0.5.0] - 2026-05-21
 

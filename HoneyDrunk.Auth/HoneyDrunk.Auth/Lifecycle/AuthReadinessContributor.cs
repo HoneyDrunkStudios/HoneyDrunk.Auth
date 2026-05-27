@@ -27,7 +27,7 @@ public sealed class AuthReadinessContributor(ISigningKeyProvider keyProvider, IL
     public bool IsRequired => true;
 
     /// <inheritdoc />
-    public async Task<(bool isReady, string? reason)> CheckReadinessAsync(CancellationToken cancellationToken)
+    public async Task<(bool isReady, string? reason)> CheckReadinessAsync(CancellationToken cancellationToken = default)
     {
         try
         {

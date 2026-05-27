@@ -12,6 +12,8 @@ internal sealed class ToggleableSigningKeyProvider(
     string audience = "api://canary",
     TimeSpan? clockSkew = null) : ISigningKeyProvider
 {
+    private const string VaultUnavailableMessage = "Vault unavailable (simulated)";
+
     private readonly List<SecurityKey> _keys = [];
     private readonly TimeSpan _clockSkew = clockSkew ?? TimeSpan.FromMinutes(5);
     private int _getKeysCallCount;
@@ -64,7 +66,7 @@ internal sealed class ToggleableSigningKeyProvider(
 
         if (!IsAvailable)
         {
-            throw new InvalidOperationException("Vault unavailable (simulated)");
+            throw new InvalidOperationException(VaultUnavailableMessage);
         }
 
         return Task.FromResult<IReadOnlyList<SecurityKey>>([.. _keys]);
@@ -75,7 +77,7 @@ internal sealed class ToggleableSigningKeyProvider(
     {
         if (!IsAvailable)
         {
-            throw new InvalidOperationException("Vault unavailable (simulated)");
+            throw new InvalidOperationException(VaultUnavailableMessage);
         }
 
         return Task.FromResult(issuer);
@@ -86,7 +88,7 @@ internal sealed class ToggleableSigningKeyProvider(
     {
         if (!IsAvailable)
         {
-            throw new InvalidOperationException("Vault unavailable (simulated)");
+            throw new InvalidOperationException(VaultUnavailableMessage);
         }
 
         return Task.FromResult(audience);
@@ -97,7 +99,7 @@ internal sealed class ToggleableSigningKeyProvider(
     {
         if (!IsAvailable)
         {
-            throw new InvalidOperationException("Vault unavailable (simulated)");
+            throw new InvalidOperationException(VaultUnavailableMessage);
         }
 
         return Task.FromResult(_clockSkew);

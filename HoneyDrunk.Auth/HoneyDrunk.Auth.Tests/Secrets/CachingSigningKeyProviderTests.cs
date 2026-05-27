@@ -160,10 +160,8 @@ public sealed class CachingSigningKeyProviderTests
 
     private sealed class RecordingSigningKeyProvider : ISigningKeyProvider
     {
-        private readonly IReadOnlyList<SecurityKey> _keys = new[]
-        {
-            new SymmetricSecurityKey(new byte[32]) { KeyId = "key-1" },
-        };
+        private readonly IReadOnlyList<SecurityKey> _keys =
+            [new SymmetricSecurityKey(new byte[32]) { KeyId = "key-1" }];
 
         public bool FailAll { get; set; }
 

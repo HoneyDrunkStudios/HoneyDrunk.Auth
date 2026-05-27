@@ -9,7 +9,7 @@
 
     <!-- Package Metadata -->
     <PackageId>HoneyDrunk.Auth</PackageId>
-    <Version>0.5.0</Version>
+    <Version>0.6.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>Authentication and authorization library for .NET. Provides JWT Bearer token validation, policy-based authorization, Vault-backed signing key management, and integration with HoneyDrunk.Kernel for Grid-aware context propagation.</Description>
     <PackageReleaseNotes>v0.5.0: Added HoneyDrunk.Audit.Abstractions-backed security event emission for token validation and authorization decisions while preserving Auth validation-only boundaries.</PackageReleaseNotes>
@@ -32,16 +32,16 @@
 
   <ItemGroup>
     <PackageReference Include="HoneyDrunk.Audit.Abstractions" Version="0.1.0" />
-    <PackageReference Include="HoneyDrunk.Kernel.Abstractions" Version="0.7.0" />
+    <PackageReference Include="HoneyDrunk.Kernel.Abstractions" Version="0.8.0" />
     <PackageReference Include="HoneyDrunk.Standards" Version="0.2.9">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="HoneyDrunk.Vault" Version="0.5.0" />
-    <PackageReference Include="HoneyDrunk.Vault.Providers.AppConfiguration" Version="0.5.0" />
-    <PackageReference Include="HoneyDrunk.Vault.Providers.AzureKeyVault" Version="0.5.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.6" />
-    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.17.0" />
+    <PackageReference Include="HoneyDrunk.Vault" Version="0.7.0" />
+    <PackageReference Include="HoneyDrunk.Vault.Providers.AppConfiguration" Version="0.7.0" />
+    <PackageReference Include="HoneyDrunk.Vault.Providers.AzureKeyVault" Version="0.7.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.8" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.18.0" />
   </ItemGroup>
 
   <ItemGroup>

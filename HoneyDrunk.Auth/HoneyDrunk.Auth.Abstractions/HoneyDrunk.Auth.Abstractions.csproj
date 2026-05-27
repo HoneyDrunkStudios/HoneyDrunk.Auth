@@ -8,7 +8,7 @@
 
     <!-- Package Metadata -->
     <PackageId>HoneyDrunk.Auth.Abstractions</PackageId>
-    <Version>0.5.0</Version>
+    <Version>0.6.0</Version>
     <Authors>HoneyDrunk Studios</Authors>
     <Description>Core abstractions and contracts for HoneyDrunk.Auth. Provides authentication and authorization interfaces including IAuthenticationProvider, IAuthorizationPolicy, AuthenticatedIdentity, and AuthorizationDecision types.</Description>
     <PackageReleaseNotes>v0.5.0: Package version aligned with Auth audit-emitter release. No contract changes.</PackageReleaseNotes>

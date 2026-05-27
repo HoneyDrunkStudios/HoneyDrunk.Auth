@@ -9,15 +9,17 @@ internal sealed class NullLoggerProvider : ILoggerProvider
 {
     public static NullLoggerProvider Instance { get; } = new();
 
-    public ILogger CreateLogger(string categoryName) => NullLogger.Instance;
+    public ILogger CreateLogger(string categoryName) => InnerNullLogger.Instance;
 
     public void Dispose()
     {
     }
 
-    private sealed class NullLogger : ILogger
+    // Renamed from NullLogger to avoid shadowing the outer NullLoggerProvider class
+    // through the inner Instance property (Sonar S3604).
+    private sealed class InnerNullLogger : ILogger
     {
-        public static NullLogger Instance { get; } = new();
+        public static InnerNullLogger Instance { get; } = new();
 
         public IDisposable? BeginScope<TState>(TState state)
             where TState : notnull => null;

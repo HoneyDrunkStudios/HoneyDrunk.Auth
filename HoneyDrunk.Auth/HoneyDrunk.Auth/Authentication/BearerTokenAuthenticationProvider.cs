@@ -119,14 +119,14 @@ public sealed class BearerTokenAuthenticationProvider(
         return AuditMetadata.Cap(metadata);
     }
 
-    private static IReadOnlyDictionary<string, string> GetAllowedAuditClaims(AuthenticationResult result, string token)
+    private static Dictionary<string, string> GetAllowedAuditClaims(AuthenticationResult result, string token)
     {
         return result.Identity is { } identity
             ? GetAllowedAuditClaims(identity)
             : TryReadAllowedClaims(token);
     }
 
-    private static IReadOnlyDictionary<string, string> GetAllowedAuditClaims(AuthenticatedIdentity identity)
+    private static Dictionary<string, string> GetAllowedAuditClaims(AuthenticatedIdentity identity)
     {
         var metadata = new Dictionary<string, string>(StringComparer.Ordinal);
 
@@ -157,7 +157,7 @@ public sealed class BearerTokenAuthenticationProvider(
             : "unavailable";
     }
 
-    private static IReadOnlyDictionary<string, string> TryReadAllowedClaims(string token)
+    private static Dictionary<string, string> TryReadAllowedClaims(string token)
     {
         var metadata = new Dictionary<string, string>(StringComparer.Ordinal);
 
@@ -282,6 +282,21 @@ public sealed class BearerTokenAuthenticationProvider(
         }
     }
 
+    private static TokenValidationParameters BuildValidationParameters(ValidationConfiguration config)
+    {
+        return new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = config.Issuer,
+            ValidateAudience = true,
+            ValidAudience = config.Audience,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKeys = config.SigningKeys,
+            ClockSkew = config.ClockSkew,
+        };
+    }
+
     private async Task EmitTokenValidationAuditAsync(
         AuthenticationResult result,
         string token,
@@ -316,6 +331,34 @@ public sealed class BearerTokenAuthenticationProvider(
     }
 
     private async Task<AuthenticationResult> ValidateTokenAsync(string token, CancellationToken cancellationToken)
+    {
+        var config = await LoadValidationConfigurationAsync(cancellationToken);
+        var validationParameters = BuildValidationParameters(config);
+
+        var handler = new JsonWebTokenHandler();
+        var result = await handler.ValidateTokenAsync(token, validationParameters);
+
+        if (!result.IsValid)
+        {
+            var resolvedResult = await TryResolveSignatureFailureAsync(
+                handler, token, validationParameters, result, cancellationToken);
+            if (resolvedResult is null)
+            {
+                return MapValidationException(result.Exception);
+            }
+
+            if (!resolvedResult.IsValid)
+            {
+                return MapValidationException(resolvedResult.Exception);
+            }
+
+            result = resolvedResult;
+        }
+
+        return BuildIdentityResult(result);
+    }
+
+    private async Task<ValidationConfiguration> LoadValidationConfigurationAsync(CancellationToken cancellationToken)
     {
         IReadOnlyList<SecurityKey> signingKeys;
         string issuer;
@@ -353,59 +396,43 @@ public sealed class BearerTokenAuthenticationProvider(
             throw new AuthenticationException(AuthenticationFailureCode.ConfigurationError, "Authentication service is misconfigured");
         }
 
-        var validationParameters = new TokenValidationParameters
+        return new ValidationConfiguration(signingKeys, issuer, audience, clockSkew);
+    }
+
+    /// <summary>
+    /// When the initial validation failed due to an unknown signing key and a caching
+    /// provider is in play, refresh the cache and retry once. Returns the retry result
+    /// (which may itself be invalid), or <c>null</c> when no refresh path applied.
+    /// </summary>
+    private async Task<TokenValidationResult?> TryResolveSignatureFailureAsync(
+        JsonWebTokenHandler handler,
+        string token,
+        TokenValidationParameters validationParameters,
+        TokenValidationResult failedResult,
+        CancellationToken cancellationToken)
+    {
+        if (!IsSignatureFailure(failedResult.Exception) ||
+            _keyProvider is not CachingSigningKeyProvider cachingProvider)
         {
-            ValidateIssuer = true,
-            ValidIssuer = issuer,
-            ValidateAudience = true,
-            ValidAudience = audience,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKeys = signingKeys,
-            ClockSkew = clockSkew,
-        };
-
-        var handler = new JsonWebTokenHandler();
-        var result = await handler.ValidateTokenAsync(token, validationParameters);
-
-        if (!result.IsValid)
-        {
-            // If validation failed due to an unknown signing key, attempt a refresh and retry once
-            if (IsSignatureFailure(result.Exception) &&
-                _keyProvider is CachingSigningKeyProvider cachingProvider)
-            {
-                var kid = TryExtractKeyId(token);
-                if (kid is not null && await cachingProvider.TryRefreshForUnknownKeyIdAsync(kid, cancellationToken))
-                {
-                    // Rebuild validation parameters with refreshed keys
-                    var refreshedKeys = await cachingProvider.GetSigningKeysAsync(cancellationToken);
-                    validationParameters.IssuerSigningKeys = refreshedKeys;
-
-                    var retryResult = await handler.ValidateTokenAsync(token, validationParameters);
-                    if (retryResult.IsValid)
-                    {
-                        result = retryResult;
-                    }
-                    else
-                    {
-                        return MapValidationException(retryResult.Exception);
-                    }
-                }
-                else
-                {
-                    return MapValidationException(result.Exception);
-                }
-            }
-            else
-            {
-                return MapValidationException(result.Exception);
-            }
+            return null;
         }
 
-        // Extract claims
+        var kid = TryExtractKeyId(token);
+        if (kid is null || !await cachingProvider.TryRefreshForUnknownKeyIdAsync(kid, cancellationToken))
+        {
+            return null;
+        }
+
+        var refreshedKeys = await cachingProvider.GetSigningKeysAsync(cancellationToken);
+        validationParameters.IssuerSigningKeys = refreshedKeys;
+
+        return await handler.ValidateTokenAsync(token, validationParameters);
+    }
+
+    private AuthenticationResult BuildIdentityResult(TokenValidationResult result)
+    {
         var claims = ExtractClaims(result);
 
-        // Validate required claims
         var missingClaims = ValidateRequiredClaims(claims);
         if (missingClaims.Count > 0)
         {
@@ -414,7 +441,6 @@ public sealed class BearerTokenAuthenticationProvider(
                 $"Required claim(s) missing: {string.Join(", ", missingClaims)}");
         }
 
-        // Build identity
         var identity = CreateIdentityFromClaims(claims);
 
         // Do not log subject IDs at info/warning level to avoid leaking sensitive information
@@ -475,11 +501,9 @@ public sealed class BearerTokenAuthenticationProvider(
         return AuthenticationResult.Fail(code, message);
     }
 
-    /// <summary>
-    /// Internal exception for propagating authentication failures with proper codes.
-    /// </summary>
-    private sealed class AuthenticationException(AuthenticationFailureCode failureCode, string message) : Exception(message)
-    {
-        public AuthenticationFailureCode FailureCode { get; } = failureCode;
-    }
+    private readonly record struct ValidationConfiguration(
+        IReadOnlyList<SecurityKey> SigningKeys,
+        string Issuer,
+        string Audience,
+        TimeSpan ClockSkew);
 }
