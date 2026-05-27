@@ -1,6 +1,7 @@
 using HoneyDrunk.Audit.Abstractions;
 using HoneyDrunk.Auth.Abstractions;
 using HoneyDrunk.Auth.Authentication;
+using HoneyDrunk.Auth.Secrets;
 using HoneyDrunk.Auth.Tests.Helpers;
 using HoneyDrunk.Kernel.Abstractions.Context;
 using HoneyDrunk.Kernel.Abstractions.Identity;
@@ -495,7 +496,7 @@ public sealed class BearerTokenAuthenticationProviderTests
     public async Task AuthenticateAsync_KeyProviderThrows_ReturnsVaultUnavailable()
     {
         // Arrange
-        var keyProvider = Substitute.For<HoneyDrunk.Auth.Secrets.ISigningKeyProvider>();
+        var keyProvider = Substitute.For<ISigningKeyProvider>();
         keyProvider.GetSigningKeysAsync(Arg.Any<CancellationToken>())
             .Returns<Task<IReadOnlyList<Microsoft.IdentityModel.Tokens.SecurityKey>>>(
                 _ => throw new InvalidOperationException("Vault unreachable"));
@@ -509,7 +510,63 @@ public sealed class BearerTokenAuthenticationProviderTests
         Assert.Equal(AuthenticationFailureCode.VaultUnavailable, result.FailureCode);
     }
 
-    private BearerTokenAuthenticationProvider BuildProvider(HoneyDrunk.Auth.Secrets.ISigningKeyProvider keyProvider)
+    /// <summary>
+    /// Caching provider path: token signed with a kid that's missing from the cache
+    /// at validate-time but present in the underlying provider — the refresh succeeds
+    /// and the retry validates. Covers the success leg of
+    /// TryResolveSignatureFailureAsync.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task AuthenticateAsync_CachingProviderRefreshesAndRetries_WhenKidUnknownButResolvable()
+    {
+        // Arrange: inner has only the old key; caching layer initialises with that snapshot.
+        var oldKey = TestTokenGenerator.GenerateKey("old-kid");
+        var inner = new InMemorySigningKeyProvider().AddKey(oldKey.KeyId!, oldKey.Key);
+        var caching = new CachingSigningKeyProvider(inner, Options.Create(new AuthOptions()), NullLogger<CachingSigningKeyProvider>.Instance);
+
+        // Warm the cache, then add a new key to the inner provider.
+        _ = await caching.GetSigningKeysAsync();
+        var newKey = TestTokenGenerator.GenerateKey("new-kid");
+        inner.AddKey(newKey.KeyId!, newKey.Key);
+
+        var provider = BuildProvider(caching);
+        var token = TestTokenGenerator.GenerateToken(newKey);
+
+        // Act: first validation fails (cache doesn't yet know new-kid); caching layer
+        // refreshes (TryRefreshForUnknownKeyIdAsync returns true); retry succeeds.
+        var result = await provider.AuthenticateAsync(AuthCredential.Bearer(token));
+
+        // Assert
+        Assert.True(result.IsAuthenticated);
+    }
+
+    /// <summary>
+    /// Caching provider path: token signed with a kid that is missing from both the
+    /// cache and the underlying provider — refresh returns false, the failure
+    /// propagates as InvalidSignature. Covers the !TryRefreshForUnknownKeyIdAsync
+    /// branch.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task AuthenticateAsync_CachingProviderRefreshFails_WhenKidNotInProvider()
+    {
+        var oldKey = TestTokenGenerator.GenerateKey("old-kid");
+        var inner = new InMemorySigningKeyProvider().AddKey(oldKey.KeyId!, oldKey.Key);
+        var caching = new CachingSigningKeyProvider(inner, Options.Create(new AuthOptions()), NullLogger<CachingSigningKeyProvider>.Instance);
+        _ = await caching.GetSigningKeysAsync();
+
+        var fakeKey = TestTokenGenerator.GenerateKey("fake-kid");
+        var provider = BuildProvider(caching);
+        var token = TestTokenGenerator.GenerateToken(fakeKey);
+
+        var result = await provider.AuthenticateAsync(AuthCredential.Bearer(token));
+
+        Assert.False(result.IsAuthenticated);
+        Assert.Equal(AuthenticationFailureCode.InvalidSignature, result.FailureCode);
+    }
+
+    private BearerTokenAuthenticationProvider BuildProvider(ISigningKeyProvider keyProvider)
     {
         var gridContext = Substitute.For<IGridContext>();
         gridContext.TenantId.Returns(TenantId.Internal);
