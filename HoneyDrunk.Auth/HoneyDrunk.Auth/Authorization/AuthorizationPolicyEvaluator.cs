@@ -9,7 +9,7 @@ namespace HoneyDrunk.Auth.Authorization;
 /// This class contains the core authorization logic with no I/O, logging, or telemetry.
 /// It is designed to be wrapped by decorators that add observability concerns.
 /// </remarks>
-public sealed class AuthorizationPolicyEvaluator
+public static class AuthorizationPolicyEvaluator
 {
     /// <summary>
     /// Evaluates an authorization request against an authenticated identity.

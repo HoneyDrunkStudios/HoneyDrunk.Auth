@@ -241,6 +241,14 @@ static async Task<int> Check4_MissingRequiredClaim()
 
     var key = TokenMinter.GenerateKey("claim-key-1");
 
+    // NOTE: Sonar S1199 ("Extract this nested code block into a separate method")
+    // flags the two scope blocks below. Hoisting them to local functions in this
+    // top-level Program runs into CS8422 — static local functions cannot reference
+    // the other top-level helpers (BuildServicesWithCaching), so the analyzer
+    // suggestion doesn't apply cleanly to the file-scoped Program shape. The
+    // blocks stay scoped here so the provider/services instances dispose between
+    // sub-tests.
+
     // Test 4a: Missing custom required claim (tenant_id)
     {
         var toggleableProvider = new ToggleableSigningKeyProvider().AddKey(key);
@@ -484,23 +492,11 @@ static Task<int> Check8_PolicyNotFoundDistinguishable()
 {
     const string name = "PolicyNotFound distinguishable";
 
-    // Verify the enum value exists and is distinct
-    var policyNotFound = AuthorizationDenyCode.PolicyNotFound;
-    var genericDeny = AuthorizationDenyCode.PolicyNotSatisfied;
-
-    if (policyNotFound == genericDeny)
-    {
-        Console.WriteLine($"FAIL {name}: PolicyNotFound is not distinguishable from PolicyNotSatisfied");
-        return Task.FromResult(ExitCodes.PolicyNotFoundIndistinguishable);
-    }
-
-    if ((int)policyNotFound != 8)
-    {
-        Console.WriteLine($"FAIL {name}: PolicyNotFound has unexpected value {(int)policyNotFound}, expected 8");
-        return Task.FromResult(ExitCodes.PolicyNotFoundIndistinguishable);
-    }
-
-    // Create a deny reason with PolicyNotFound and verify it's preserved
+    // Round-trip the enum through AuthorizationDecision and verify it's preserved.
+    // (Earlier versions of this canary also tried to compare `PolicyNotFound ==
+    // PolicyNotSatisfied` and `(int)PolicyNotFound != 8` — Sonar correctly proved
+    // both always-false at compile time of this canary; the underlying invariant
+    // is now covered by AuthorizationDecisionTests in HoneyDrunk.Auth.Tests.)
     var decision = AuthorizationDecision.Deny(AuthorizationDenyCode.PolicyNotFound, "Test policy not found");
 
     if (!decision.DenyReasons.Any(r => r.Code == AuthorizationDenyCode.PolicyNotFound))

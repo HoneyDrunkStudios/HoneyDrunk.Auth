@@ -29,7 +29,7 @@ public sealed class AuthHealthContributor(ISigningKeyProvider keyProvider, ILogg
 
     /// <inheritdoc />
 #pragma warning disable SA1316 // Tuple element names should use correct casing - interface uses lowercase
-    public async Task<(HealthStatus status, string? message)> CheckHealthAsync(CancellationToken cancellationToken)
+    public async Task<(HealthStatus status, string? message)> CheckHealthAsync(CancellationToken cancellationToken = default)
     {
         try
         {

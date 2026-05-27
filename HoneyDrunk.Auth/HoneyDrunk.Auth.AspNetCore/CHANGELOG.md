@@ -7,8 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-27
+
 ### Changed
 
+- Aligned ASP.NET Core integration with the HoneyDrunk.Auth 0.6.0 Sonar follow-up release (ADR-0011 D11). No ASP.NET Core contract changes.
+- Bumped `HoneyDrunk.Vault.EventGrid` `0.5.0 → 0.7.0` (Vault's 0.6.0 SonarCloud onboarding + 0.7.0 DIM promotion).
 - Refreshed HoneyDrunk.Standards to 0.2.9 for ADR-0047 testing tooling alignment.
 
 ## [0.5.0] - 2026-05-21

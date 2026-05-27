@@ -127,18 +127,12 @@ public sealed class VaultSigningKeyProvider(
     }
 
     /// <summary>
-    /// DTO for deserializing signing key JSON from Vault.
+    /// DTO for deserializing signing key JSON from Vault. Positional record so
+    /// Sonar sees the properties as assigned via the primary constructor —
+    /// `init` auto-properties were still flagged as "unused setter / unassigned"
+    /// because JsonSerializer's reflection-based binding is invisible to the
+    /// analyzer (Sonar S2376 / S3459). System.Text.Json supports records with
+    /// the primary-ctor binding pattern since .NET 6.
     /// </summary>
-#pragma warning disable CA1812 // Class is instantiated by JsonSerializer.Deserialize
-    private sealed class SigningKeyInfoDto
-    {
-        public string? Kid { get; set; }
-
-        public string? Alg { get; set; }
-
-        public string? Key { get; set; }
-
-        public bool? Active { get; set; }
-    }
-#pragma warning restore CA1812
+    private sealed record SigningKeyInfoDto(string? Kid, string? Alg, string? Key, bool? Active);
 }
