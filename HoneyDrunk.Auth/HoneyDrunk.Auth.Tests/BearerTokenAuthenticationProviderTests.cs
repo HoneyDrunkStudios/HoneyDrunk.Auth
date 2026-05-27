@@ -421,4 +421,108 @@ public sealed class BearerTokenAuthenticationProviderTests
         // Assert
         Assert.True(result.IsAuthenticated);
     }
+
+    /// <summary>
+    /// Tests that an empty key set surfaces as ConfigurationError (covers the
+    /// LoadValidationConfigurationAsync misconfiguration branch).
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task AuthenticateAsync_NoSigningKeys_ReturnsConfigurationError()
+    {
+        // Arrange - key provider has issuer/audience but no keys
+        var emptyKeyProvider = new InMemorySigningKeyProvider();
+        var provider = BuildProvider(emptyKeyProvider);
+
+        // Act
+        var result = await provider.AuthenticateAsync(AuthCredential.Bearer("any-token"));
+
+        // Assert
+        Assert.False(result.IsAuthenticated);
+        Assert.Equal(AuthenticationFailureCode.ConfigurationError, result.FailureCode);
+    }
+
+    /// <summary>
+    /// Tests that an empty issuer surfaces as ConfigurationError.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task AuthenticateAsync_EmptyIssuer_ReturnsConfigurationError()
+    {
+        // Arrange
+        var key = TestTokenGenerator.GenerateKey();
+        var keyProvider = new InMemorySigningKeyProvider()
+            .WithIssuer(string.Empty)
+            .AddKey(key.KeyId!, key.Key);
+        var provider = BuildProvider(keyProvider);
+
+        // Act
+        var result = await provider.AuthenticateAsync(AuthCredential.Bearer("any-token"));
+
+        // Assert
+        Assert.False(result.IsAuthenticated);
+        Assert.Equal(AuthenticationFailureCode.ConfigurationError, result.FailureCode);
+    }
+
+    /// <summary>
+    /// Tests that an empty audience surfaces as ConfigurationError.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task AuthenticateAsync_EmptyAudience_ReturnsConfigurationError()
+    {
+        // Arrange
+        var key = TestTokenGenerator.GenerateKey();
+        var keyProvider = new InMemorySigningKeyProvider()
+            .WithAudience(string.Empty)
+            .AddKey(key.KeyId!, key.Key);
+        var provider = BuildProvider(keyProvider);
+
+        // Act
+        var result = await provider.AuthenticateAsync(AuthCredential.Bearer("any-token"));
+
+        // Assert
+        Assert.False(result.IsAuthenticated);
+        Assert.Equal(AuthenticationFailureCode.ConfigurationError, result.FailureCode);
+    }
+
+    /// <summary>
+    /// Tests that a key-provider exception surfaces as VaultUnavailable (covers
+    /// the LoadValidationConfigurationAsync catch path).
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task AuthenticateAsync_KeyProviderThrows_ReturnsVaultUnavailable()
+    {
+        // Arrange
+        var keyProvider = Substitute.For<HoneyDrunk.Auth.Secrets.ISigningKeyProvider>();
+        keyProvider.GetSigningKeysAsync(Arg.Any<CancellationToken>())
+            .Returns<Task<IReadOnlyList<Microsoft.IdentityModel.Tokens.SecurityKey>>>(
+                _ => throw new InvalidOperationException("Vault unreachable"));
+        var provider = BuildProvider(keyProvider);
+
+        // Act
+        var result = await provider.AuthenticateAsync(AuthCredential.Bearer("any-token"));
+
+        // Assert
+        Assert.False(result.IsAuthenticated);
+        Assert.Equal(AuthenticationFailureCode.VaultUnavailable, result.FailureCode);
+    }
+
+    private BearerTokenAuthenticationProvider BuildProvider(HoneyDrunk.Auth.Secrets.ISigningKeyProvider keyProvider)
+    {
+        var gridContext = Substitute.For<IGridContext>();
+        gridContext.TenantId.Returns(TenantId.Internal);
+        gridContext.CorrelationId.Returns("corr-test");
+        var gridContextAccessor = Substitute.For<IGridContextAccessor>();
+        gridContextAccessor.GridContext.Returns(gridContext);
+
+        return new BearerTokenAuthenticationProvider(
+            keyProvider,
+            Options.Create(new AuthOptions()),
+            _telemetryFactory,
+            _auditLog,
+            gridContextAccessor,
+            NullLogger<BearerTokenAuthenticationProvider>.Instance);
+    }
 }

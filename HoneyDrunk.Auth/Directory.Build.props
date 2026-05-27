@@ -1,0 +1,22 @@
+<Project>
+
+  <!--
+    Repo-wide Sonar overrides.
+
+    HoneyDrunk.Auth.Canary is a runtime smoke-test executable (not unit-tested
+    via xUnit), so its files have no coverlet-emitted coverage. Without an
+    exclusion they pull the "Coverage on New Code" gate below 80% even when
+    every line CAN be exercised from the canary itself.
+
+    We exclude Canary from the COVERAGE metric only (sonar.coverage.exclusions)
+    so its files still get analysed for code-smell / bug / vulnerability findings
+    (the canary is where most of the test fakes and TokenMinter live, so we
+    want Sonar to keep flagging issues there).
+  -->
+  <ItemGroup>
+    <SonarQubeSetting Include="sonar.coverage.exclusions">
+      <Value>HoneyDrunk.Auth.Canary/**/*.cs</Value>
+    </SonarQubeSetting>
+  </ItemGroup>
+
+</Project>
