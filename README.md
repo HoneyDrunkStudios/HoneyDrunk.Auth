@@ -286,30 +286,30 @@ HoneyDrunk.Auth/
 
 ### Package Documentation
 
-- **[HoneyDrunk.Auth.Abstractions README](HoneyDrunk.Auth.Abstractions/README.md)** - Contracts/abstractions package
-- **[HoneyDrunk.Auth README](HoneyDrunk.Auth/README.md)** - Runtime implementations package
-- **[HoneyDrunk.Auth.AspNetCore README](HoneyDrunk.Auth.AspNetCore/README.md)** - ASP.NET Core integration
+- **[HoneyDrunk.Auth.Abstractions README](HoneyDrunk.Auth/HoneyDrunk.Auth.Abstractions/README.md)** - Contracts/abstractions package
+- **[HoneyDrunk.Auth README](HoneyDrunk.Auth/HoneyDrunk.Auth/README.md)** - Runtime implementations package
+- **[HoneyDrunk.Auth.AspNetCore README](HoneyDrunk.Auth/HoneyDrunk.Auth.AspNetCore/README.md)** - ASP.NET Core integration
 
 ### Architecture & Guides
 
 **Core Documentation:**
 
-- **[FILE_GUIDE.md](docs/FILE_GUIDE.md)** - Complete file structure and architecture reference (START HERE)
-- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Layering, Kernel/Vault integration
-- **[Abstractions.md](docs/Abstractions.md)** - Core contracts and types
+- **[FILE_GUIDE.md](HoneyDrunk.Auth/docs/FILE_GUIDE.md)** - Complete file structure and architecture reference (START HERE)
+- **[ARCHITECTURE.md](HoneyDrunk.Auth/docs/ARCHITECTURE.md)** - Layering, Kernel/Vault integration
+- **[Abstractions.md](HoneyDrunk.Auth/docs/Abstractions.md)** - Core contracts and types
 
 **Component Guides:**
 
-- **[Authentication.md](docs/Authentication.md)** - JWT Bearer token validation
-- **[Authorization.md](docs/Authorization.md)** - Policy-based access control
-- **[Secrets.md](docs/Secrets.md)** - Vault integration and signing keys
-- **[Lifecycle.md](docs/Lifecycle.md)** - Health, readiness, and startup hooks
-- **[Telemetry.md](docs/Telemetry.md)** - OpenTelemetry integration
+- **[Authentication.md](HoneyDrunk.Auth/docs/Authentication.md)** - JWT Bearer token validation
+- **[Authorization.md](HoneyDrunk.Auth/docs/Authorization.md)** - Policy-based access control
+- **[Secrets.md](HoneyDrunk.Auth/docs/Secrets.md)** - Vault integration and signing keys
+- **[Lifecycle.md](HoneyDrunk.Auth/docs/Lifecycle.md)** - Health, readiness, and startup hooks
+- **[Telemetry.md](HoneyDrunk.Auth/docs/Telemetry.md)** - OpenTelemetry integration
 
 **Integration:**
 
-- **[AspNetCore.md](docs/AspNetCore.md)** - ASP.NET Core middleware and extensions
-- **[DependencyInjection.md](docs/DependencyInjection.md)** - Service registration
+- **[AspNetCore.md](HoneyDrunk.Auth/docs/AspNetCore.md)** - ASP.NET Core middleware and extensions
+- **[DependencyInjection.md](HoneyDrunk.Auth/docs/DependencyInjection.md)** - Service registration
 
 ---
 
@@ -338,6 +338,6 @@ This project is licensed under the [MIT License](LICENSE).
 
 **Built with 🍯 by HoneyDrunk Studios**
 
-[GitHub](https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth) • [Documentation](docs/FILE_GUIDE.md) • [Issues](https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth/issues)
+[GitHub](https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth) • [Documentation](HoneyDrunk.Auth/docs/FILE_GUIDE.md) • [Issues](https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth/issues)
 
 </div>
