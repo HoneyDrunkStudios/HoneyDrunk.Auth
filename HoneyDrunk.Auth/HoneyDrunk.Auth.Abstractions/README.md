@@ -17,7 +17,7 @@ dotnet add package HoneyDrunk.Auth.Abstractions
 ```
 
 ```xml
-<PackageReference Include="HoneyDrunk.Auth.Abstractions" Version="0.1.0" />
+<PackageReference Include="HoneyDrunk.Auth.Abstractions" Version="0.6.0" />
 ```
 
 ## 🔑 Key Types

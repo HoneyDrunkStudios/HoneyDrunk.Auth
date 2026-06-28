@@ -17,7 +17,7 @@ dotnet add package HoneyDrunk.Auth.AspNetCore
 ```
 
 ```xml
-<PackageReference Include="HoneyDrunk.Auth.AspNetCore" Version="0.1.0" />
+<PackageReference Include="HoneyDrunk.Auth.AspNetCore" Version="0.6.0" />
 ```
 
 ## 🚀 Quick Start
