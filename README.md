@@ -48,13 +48,13 @@ dotnet add package HoneyDrunk.Auth.Abstractions
 ```xml
 <ItemGroup>
   <!-- ASP.NET Core integration (recommended) -->
-  <PackageReference Include="HoneyDrunk.Auth.AspNetCore" Version="0.1.0" />
+  <PackageReference Include="HoneyDrunk.Auth.AspNetCore" Version="0.6.0" />
   
   <!-- Core runtime only -->
-  <PackageReference Include="HoneyDrunk.Auth" Version="0.1.0" />
+  <PackageReference Include="HoneyDrunk.Auth" Version="0.6.0" />
   
   <!-- Abstractions only (for libraries) -->
-  <PackageReference Include="HoneyDrunk.Auth.Abstractions" Version="0.1.0" />
+  <PackageReference Include="HoneyDrunk.Auth.Abstractions" Version="0.6.0" />
 </ItemGroup>
 ```
 
