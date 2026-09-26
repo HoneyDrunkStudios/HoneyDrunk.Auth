@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.6.1] - 2026-09-26
+
+### Changed
+
+- Refresh stable NuGet dependencies; preserve target frameworks and HoneyDrunk public contracts.
+
+| Dependency | Previous | Updated |
+| --- | --- | --- |
+| Microsoft.AspNetCore.TestHost | 10.0.8 | 10.0.12 |
+| Microsoft.CodeAnalysis.NetAnalyzers | 10.0.201 | 10.0.401 |
+| Microsoft.Extensions.Configuration | 10.0.8 | 10.0.12 |
+| Microsoft.Extensions.Configuration.Binder | 10.0.8 | 10.0.12 |
+| Microsoft.IdentityModel.JsonWebTokens | 8.18.0 | 8.23.0 |
+
+
 All notable changes to the HoneyDrunk.Auth repository are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
@@ -8,6 +23,20 @@ See the per-package CHANGELOGs for detailed, package-scoped history:
 - [HoneyDrunk.Auth.Abstractions](HoneyDrunk.Auth/HoneyDrunk.Auth.Abstractions/CHANGELOG.md)
 - [HoneyDrunk.Auth](HoneyDrunk.Auth/HoneyDrunk.Auth/CHANGELOG.md)
 - [HoneyDrunk.Auth.AspNetCore](HoneyDrunk.Auth/HoneyDrunk.Auth.AspNetCore/CHANGELOG.md)
+
+
+
+
+### Verified HoneyDrunk dependencies
+
+- HoneyDrunk.Audit.Abstractions: 0.1.0 -> 0.2.1 (verified on NuGet.org).
+- HoneyDrunk.Kernel.Abstractions: 0.8.0 -> 0.8.1 (verified on NuGet.org).
+- HoneyDrunk.Standards: 0.2.9 -> 0.3.0 (verified on NuGet.org).
+- HoneyDrunk.Standards.Tests: 0.2.9 -> 0.3.0 (verified on NuGet.org).
+- HoneyDrunk.Vault: 0.7.0 -> 0.8.1 (verified on NuGet.org).
+- HoneyDrunk.Vault.EventGrid: 0.7.0 -> 0.8.1 (verified on NuGet.org).
+- HoneyDrunk.Vault.Providers.AppConfiguration: 0.7.0 -> 0.8.1 (verified on NuGet.org).
+- HoneyDrunk.Vault.Providers.AzureKeyVault: 0.7.0 -> 0.8.1 (verified on NuGet.org).
 
 ## [Unreleased]
 

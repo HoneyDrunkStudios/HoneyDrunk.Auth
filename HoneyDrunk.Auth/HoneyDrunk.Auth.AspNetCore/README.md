@@ -1,4 +1,4 @@
-﻿# HoneyDrunk.Auth.AspNetCore
+# HoneyDrunk.Auth.AspNetCore
 
 [![NuGet](https://img.shields.io/nuget/v/HoneyDrunk.Auth.AspNetCore.svg)](https://www.nuget.org/packages/HoneyDrunk.Auth.AspNetCore)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -17,7 +17,7 @@ dotnet add package HoneyDrunk.Auth.AspNetCore
 ```
 
 ```xml
-<PackageReference Include="HoneyDrunk.Auth.AspNetCore" Version="0.6.0" />
+<PackageReference Include="HoneyDrunk.Auth.AspNetCore" Version="0.6.1" />
 ```
 
 ## 🚀 Quick Start
