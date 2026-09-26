@@ -1,4 +1,4 @@
-﻿# HoneyDrunk.Auth.Abstractions
+# HoneyDrunk.Auth.Abstractions
 
 [![NuGet](https://img.shields.io/nuget/v/HoneyDrunk.Auth.Abstractions.svg)](https://www.nuget.org/packages/HoneyDrunk.Auth.Abstractions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -17,7 +17,7 @@ dotnet add package HoneyDrunk.Auth.Abstractions
 ```
 
 ```xml
-<PackageReference Include="HoneyDrunk.Auth.Abstractions" Version="0.6.0" />
+<PackageReference Include="HoneyDrunk.Auth.Abstractions" Version="0.6.1" />
 ```
 
 ## 🔑 Key Types
