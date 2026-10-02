@@ -22,7 +22,7 @@ Enable Azure RBAC on the vault. Access policies are forbidden. Grant the Auth ma
 /internal/vault/invalidate
 ```
 
-The walkthrough for portal provisioning and OIDC federation lives in `HoneyDrunk.Architecture`; keep this repo's deployment notes limited to Auth-specific names and settings.
+The walkthrough for portal provisioning and OIDC federation lives in `HoneyDrunk.Studio`; keep this repo's deployment notes limited to Auth-specific names and settings.
 
 ## Configuration Split
 
