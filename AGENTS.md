@@ -19,3 +19,11 @@ dotnet test HoneyDrunk.Auth/HoneyDrunk.Auth.slnx -c Release --no-build
 ```
 
 Use the checked-in workflow and relevant test documentation for additional integration prerequisites, coverage and consumer checks. Do not use live resources or credentials merely to make a local check pass.
+
+## Code Review Rules
+
+Apply the [shared review criteria](https://github.com/HoneyDrunkStudios/HoneyDrunk.Standards/blob/main/HoneyDrunk.Standards/docs/CONVENTIONS.md#code-review) to changed behavior, using the repository boundaries above. Report actionable findings with the failing path, concrete impact and a small corrective action; disclose unavailable evidence. These rules grant no cross-repository access or merge authority.
+
+- Keep token validation and authorization policy here; issuance and account lifecycle belong in Identity. Preserve provider-neutral consumer contracts and existing Vault-backed secret access instead of bypassing those boundaries.
+- Trace issuer, audience, signature, lifetime and tenant/ownership checks through all success, fallback and error paths. Flag fail-open validation, cross-tenant cache keys, claims trusted before validation or sensitive token logging; preserve cancellation.
+- Require negative authorization/validation and contract tests for changed behavior, including realistic malformed, expired or wrong-scope inputs. Verify the consuming path, not only a mocked validator; use the repository's actual supported token contract.
