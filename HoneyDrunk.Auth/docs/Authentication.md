@@ -15,7 +15,7 @@
 
 Authentication components for validating JWT Bearer tokens. The `BearerTokenAuthenticationProvider` is the core implementation that validates tokens using signing keys retrieved from Vault.
 
-**Location:** `HoneyDrunk.Auth/Authentication/`
+**Location:** `src/HoneyDrunk.Auth/Authentication/`
 
 The authentication flow:
 1. Extract Bearer token from the `Authorization` header

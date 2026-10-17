@@ -20,7 +20,7 @@
 
 ASP.NET Core integration for HoneyDrunk.Auth. Provides middleware for automatic Bearer token authentication, identity accessors for clean dependency injection, and extension methods for endpoint authorization.
 
-**Location:** `HoneyDrunk.Auth.AspNetCore/`
+**Location:** `src/HoneyDrunk.Auth.AspNetCore/`
 
 **Request Pipeline Flow:**
 

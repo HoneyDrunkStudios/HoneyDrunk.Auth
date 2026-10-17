@@ -20,8 +20,8 @@
 Dependency injection extensions for registering HoneyDrunk.Auth services. Provides fluent APIs for both direct service collection registration and HoneyDrunk builder patterns.
 
 **Locations:**
-- `HoneyDrunk.Auth/DependencyInjection/`
-- `HoneyDrunk.Auth.AspNetCore/DependencyInjection/`
+- `src/HoneyDrunk.Auth/DependencyInjection/`
+- `src/HoneyDrunk.Auth.AspNetCore/DependencyInjection/`
 
 **Registration Options:**
 
@@ -76,7 +76,7 @@ If you need multiple policies, implement composition within your custom policy.
 
 ## HoneyDrunkAuthServiceCollectionExtensions.cs
 
-**Location:** `HoneyDrunk.Auth/DependencyInjection/`
+**Location:** `src/HoneyDrunk.Auth/DependencyInjection/`
 
 ```csharp
 public static class HoneyDrunkAuthServiceCollectionExtensions
@@ -158,7 +158,7 @@ The following services must be registered before calling `AddHoneyDrunkAuth()`:
 
 ## HoneyDrunkAuthBuilderExtensions.cs
 
-**Location:** `HoneyDrunk.Auth/DependencyInjection/`
+**Location:** `src/HoneyDrunk.Auth/DependencyInjection/`
 
 ```csharp
 public static class HoneyDrunkAuthBuilderExtensions
@@ -202,7 +202,7 @@ builder.Services
 
 ## HoneyDrunkAuthAspNetCoreServiceCollectionExtensions.cs
 
-**Location:** `HoneyDrunk.Auth.AspNetCore/DependencyInjection/`
+**Location:** `src/HoneyDrunk.Auth.AspNetCore/DependencyInjection/`
 
 ```csharp
 public static class HoneyDrunkAuthAspNetCoreServiceCollectionExtensions
@@ -268,7 +268,7 @@ builder.Services.TryAddSingleton<IAuthenticatedIdentityAccessor, HttpContextIden
 
 ## HoneyDrunkAuthApplicationBuilderExtensions.cs
 
-**Location:** `HoneyDrunk.Auth.AspNetCore/DependencyInjection/`
+**Location:** `src/HoneyDrunk.Auth.AspNetCore/DependencyInjection/`
 
 ```csharp
 public static class HoneyDrunkAuthApplicationBuilderExtensions

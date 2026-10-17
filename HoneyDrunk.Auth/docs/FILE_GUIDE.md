@@ -207,53 +207,26 @@ app.MapPost("/admin/action", async (HttpContext ctx) =>
 
 ## 📦 Project Structure
 
-```
-HoneyDrunk.Auth/
-├── HoneyDrunk.Auth.Abstractions/      # Pure contracts, no dependencies
-│   ├── IAuthenticationProvider.cs     # Authentication contract
-│   ├── IAuthorizationPolicy.cs        # Authorization contract
-│   ├── AuthCredential.cs              # Credential representation
-│   ├── AuthenticatedIdentity.cs       # Identity with claims
-│   ├── AuthenticationResult.cs        # Authentication outcome
-│   ├── AuthorizationRequest.cs        # Authorization request
-│   ├── AuthorizationDecision.cs       # Authorization outcome
-│   ├── AuthScheme.cs                  # Scheme constants
-│   ├── AuthClaimTypes.cs              # Claim type constants
-│   ├── AuthenticationFailureCode.cs   # Authentication error codes
-│   ├── AuthorizationDenyCode.cs       # Authorization denial codes
-│   └── DenyReason.cs                  # Denial reason record
-│
-├── HoneyDrunk.Auth/                   # Core runtime (Kernel + Vault)
-│   ├── Authentication/
-│   │   └── BearerTokenAuthenticationProvider.cs  # JWT validation
-│   ├── Authorization/
-│   │   └── DefaultAuthorizationPolicy.cs         # Role/scope/owner checks
-│   ├── Secrets/
-│   │   ├── ISigningKeyProvider.cs     # Signing key contract
-│   │   ├── SigningKeyInfo.cs          # Key metadata record
-│   │   └── VaultSigningKeyProvider.cs # Vault implementation
-│   ├── Lifecycle/
-│   │   ├── AuthStartupHook.cs         # Startup validation
-│   │   ├── AuthHealthContributor.cs   # Health checks
-│   │   └── AuthReadinessContributor.cs # Readiness checks
-│   ├── Telemetry/
-│   │   └── AuthTelemetry.cs           # Activity/tag constants
-│   └── DependencyInjection/
-│       ├── HoneyDrunkAuthServiceCollectionExtensions.cs
-│       └── HoneyDrunkAuthBuilderExtensions.cs
-│
-├── HoneyDrunk.Auth.AspNetCore/        # ASP.NET Core integration
-│   ├── Middleware/
-│   │   └── HoneyDrunkAuthMiddleware.cs # Request authentication
-│   ├── Authorization/
-│   │   └── AuthorizationEndpointExtensions.cs # Endpoint helpers
-│   ├── IAuthenticatedIdentityAccessor.cs  # Identity accessor contract
-│   ├── HttpContextIdentityAccessor.cs     # HttpContext implementation
-│   └── DependencyInjection/
-│       ├── HoneyDrunkAuthAspNetCoreServiceCollectionExtensions.cs
-│       └── HoneyDrunkAuthApplicationBuilderExtensions.cs
-│
-└── HoneyDrunk.Auth.Tests/             # Unit tests
+```text
+HoneyDrunk.Auth/                       # Repository root
+├── HoneyDrunk.Auth.slnx
+├── Directory.Build.props
+├── src/
+│   ├── HoneyDrunk.Auth.Abstractions/   # Pure contracts
+│   ├── HoneyDrunk.Auth/                # Core runtime (Kernel + Vault)
+│   │   ├── Authentication/
+│   │   ├── Authorization/
+│   │   ├── Secrets/
+│   │   ├── Lifecycle/
+│   │   ├── Telemetry/
+│   │   └── DependencyInjection/
+│   └── HoneyDrunk.Auth.AspNetCore/     # ASP.NET Core integration
+│       ├── Middleware/
+│       ├── Authorization/
+│       └── DependencyInjection/
+├── tests/
+│   └── HoneyDrunk.Auth.Tests/          # Unit tests
+└── HoneyDrunk.Auth/docs/               # Component guides
 ```
 
 ---
