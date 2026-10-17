@@ -15,7 +15,7 @@
   -->
   <ItemGroup>
     <SonarQubeSetting Include="sonar.coverage.exclusions">
-      <Value>HoneyDrunk.Auth.Canary/**/*.cs</Value>
+      <Value>tests/HoneyDrunk.Auth.Canary/**/*.cs</Value>
     </SonarQubeSetting>
   </ItemGroup>
 

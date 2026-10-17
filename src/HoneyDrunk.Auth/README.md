@@ -147,11 +147,11 @@ else
 
 ## 📖 Documentation
 
-- **[Authentication Guide](../docs/Authentication.md)** - JWT Bearer token validation
-- **[Authorization Guide](../docs/Authorization.md)** - Policy-based access control
-- **[Secrets Guide](../docs/Secrets.md)** - Vault integration
-- **[Lifecycle Guide](../docs/Lifecycle.md)** - Health and readiness
-- **[FILE_GUIDE.md](../docs/FILE_GUIDE.md)** - Complete architecture reference
+- **[Authentication Guide](../../HoneyDrunk.Auth/docs/Authentication.md)** - JWT Bearer token validation
+- **[Authorization Guide](../../HoneyDrunk.Auth/docs/Authorization.md)** - Policy-based access control
+- **[Secrets Guide](../../HoneyDrunk.Auth/docs/Secrets.md)** - Vault integration
+- **[Lifecycle Guide](../../HoneyDrunk.Auth/docs/Lifecycle.md)** - Health and readiness
+- **[FILE_GUIDE.md](../../HoneyDrunk.Auth/docs/FILE_GUIDE.md)** - Complete architecture reference
 
 ## ⚖️ License
 

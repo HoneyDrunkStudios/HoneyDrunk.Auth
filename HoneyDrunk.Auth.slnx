@@ -1,0 +1,29 @@
+<Solution>
+  <Folder Name="/Docs/">
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/Docs/FileGuide/">
+    <File Path="HoneyDrunk.Auth/docs/Abstractions.md" />
+    <File Path="HoneyDrunk.Auth/docs/ARCHITECTURE.md" />
+    <File Path="HoneyDrunk.Auth/docs/AspNetCore.md" />
+    <File Path="HoneyDrunk.Auth/docs/Authentication.md" />
+    <File Path="HoneyDrunk.Auth/docs/Authorization.md" />
+    <File Path="HoneyDrunk.Auth/docs/DependencyInjection.md" />
+    <File Path="HoneyDrunk.Auth/docs/FILE_GUIDE.md" />
+    <File Path="HoneyDrunk.Auth/docs/Lifecycle.md" />
+    <File Path="HoneyDrunk.Auth/docs/Secrets.md" />
+    <File Path="HoneyDrunk.Auth/docs/Telemetry.md" />
+  </Folder>
+  <Folder Name="/Pipelines/">
+    <File Path=".github/workflows/publish.yml" />
+    <File Path=".github/workflows/hive-field-mirror.yml" />
+    <File Path=".github/workflows/nightly-security.yml" />
+    <File Path=".github/workflows/pr.yml" />
+    <File Path=".github/workflows/weekly-deps.yml" />
+  </Folder>
+  <Project Path="src/HoneyDrunk.Auth.Abstractions/HoneyDrunk.Auth.Abstractions.csproj" />
+  <Project Path="src/HoneyDrunk.Auth.AspNetCore/HoneyDrunk.Auth.AspNetCore.csproj" />
+  <Project Path="tests/HoneyDrunk.Auth.Canary/HoneyDrunk.Auth.Canary.csproj" />
+  <Project Path="tests/HoneyDrunk.Auth.Tests/HoneyDrunk.Auth.Tests.csproj" />
+  <Project Path="src/HoneyDrunk.Auth/HoneyDrunk.Auth.csproj" />
+</Solution>

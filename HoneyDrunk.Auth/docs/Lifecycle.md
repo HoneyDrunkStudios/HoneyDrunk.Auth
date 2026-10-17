@@ -19,7 +19,7 @@
 
 Lifecycle components that integrate Auth with HoneyDrunk.Kernel's lifecycle management. These components ensure the Auth system is properly configured at startup and can report its health status for Kubernetes probes.
 
-**Location:** `HoneyDrunk.Auth/Lifecycle/`
+**Location:** `src/HoneyDrunk.Auth/Lifecycle/`
 
 **Lifecycle Flow:**
 

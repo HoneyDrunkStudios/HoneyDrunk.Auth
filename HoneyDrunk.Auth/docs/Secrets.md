@@ -18,7 +18,7 @@
 
 Secret management components for retrieving signing keys from HoneyDrunk.Vault and non-secret token validation settings from App Configuration. The Auth system never stores secrets locally.
 
-**Location:** `HoneyDrunk.Auth/Secrets/`
+**Location:** `src/HoneyDrunk.Auth/Secrets/`
 
 **Secrets and Configuration Used:**
 

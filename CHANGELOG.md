@@ -20,9 +20,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 See the per-package CHANGELOGs for detailed, package-scoped history:
 
-- [HoneyDrunk.Auth.Abstractions](HoneyDrunk.Auth/HoneyDrunk.Auth.Abstractions/CHANGELOG.md)
-- [HoneyDrunk.Auth](HoneyDrunk.Auth/HoneyDrunk.Auth/CHANGELOG.md)
-- [HoneyDrunk.Auth.AspNetCore](HoneyDrunk.Auth/HoneyDrunk.Auth.AspNetCore/CHANGELOG.md)
+- [HoneyDrunk.Auth.Abstractions](src/HoneyDrunk.Auth.Abstractions/CHANGELOG.md)
+- [HoneyDrunk.Auth](src/HoneyDrunk.Auth/CHANGELOG.md)
+- [HoneyDrunk.Auth.AspNetCore](src/HoneyDrunk.Auth.AspNetCore/CHANGELOG.md)
 
 
 

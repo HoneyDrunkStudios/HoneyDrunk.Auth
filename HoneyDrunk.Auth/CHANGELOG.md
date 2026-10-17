@@ -6,9 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 **Note:** See individual package CHANGELOGs for detailed changes:
-- [HoneyDrunk.Auth.Abstractions CHANGELOG](HoneyDrunk.Auth.Abstractions/CHANGELOG.md)
-- [HoneyDrunk.Auth CHANGELOG](HoneyDrunk.Auth/CHANGELOG.md)
-- [HoneyDrunk.Auth.AspNetCore CHANGELOG](HoneyDrunk.Auth.AspNetCore/CHANGELOG.md)
+- [HoneyDrunk.Auth.Abstractions CHANGELOG](../src/HoneyDrunk.Auth.Abstractions/CHANGELOG.md)
+- [HoneyDrunk.Auth CHANGELOG](../src/HoneyDrunk.Auth/CHANGELOG.md)
+- [HoneyDrunk.Auth.AspNetCore CHANGELOG](../src/HoneyDrunk.Auth.AspNetCore/CHANGELOG.md)
 
 ---
 

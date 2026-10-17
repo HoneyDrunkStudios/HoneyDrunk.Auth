@@ -16,7 +16,7 @@
 
 Authorization components for evaluating access control decisions. The `DefaultAuthorizationPolicy` provides scope-based, role-based, and ownership-based authorization checks.
 
-**Location:** `HoneyDrunk.Auth/Authorization/`
+**Location:** `src/HoneyDrunk.Auth/Authorization/`
 
 The authorization evaluation flow:
 1. Check if the request is authenticated

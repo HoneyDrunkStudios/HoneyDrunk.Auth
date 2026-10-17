@@ -27,7 +27,7 @@
 
 Core abstractions and contracts for the HoneyDrunk authentication and authorization system. This package has **no external dependencies**, making it ideal for defining contracts in shared libraries or domain projects.
 
-**Location:** `HoneyDrunk.Auth.Abstractions/`
+**Location:** `src/HoneyDrunk.Auth.Abstractions/`
 
 The separation of abstractions allows consuming projects to depend only on contracts without pulling in runtime dependencies like JWT libraries or Vault clients.
 

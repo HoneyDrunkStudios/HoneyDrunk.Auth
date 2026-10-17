@@ -16,7 +16,7 @@
 
 Telemetry constants for Auth operations. The Auth system integrates with OpenTelemetry via HoneyDrunk.Kernel's `ITelemetryActivityFactory` for distributed tracing.
 
-**Location:** `HoneyDrunk.Auth/Telemetry/`
+**Location:** `src/HoneyDrunk.Auth/Telemetry/`
 
 **Telemetry Integration:**
 
