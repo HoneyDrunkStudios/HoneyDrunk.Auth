@@ -252,8 +252,9 @@ HoneyDrunk.Auth/
 │       ├── HoneyDrunkAuthAspNetCoreServiceCollectionExtensions.cs
 │       └── HoneyDrunkAuthApplicationBuilderExtensions.cs
 │
-├── tests/HoneyDrunk.Auth.Tests/             # Unit tests
-└── HoneyDrunk.Auth/docs/                               # Complete documentation
+├── tests/HoneyDrunk.Auth.Tests/           # Unit tests
+├── tests/HoneyDrunk.Auth.Canary/          # Hosting canary (dotnet run, non-zero exit on failure)
+└── HoneyDrunk.Auth/docs/                  # Complete documentation (CHANGELOG.md alongside)
 ```
 
 ### Dependency Diagram

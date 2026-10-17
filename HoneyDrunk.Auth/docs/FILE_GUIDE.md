@@ -225,8 +225,11 @@ HoneyDrunk.Auth/                       # Repository root
 │       ├── Authorization/
 │       └── DependencyInjection/
 ├── tests/
-│   └── HoneyDrunk.Auth.Tests/          # Unit tests
-└── HoneyDrunk.Auth/docs/               # Component guides
+│   ├── HoneyDrunk.Auth.Tests/          # Unit tests
+│   └── HoneyDrunk.Auth.Canary/         # Hosting canary (exits non-zero on broken invariants)
+└── HoneyDrunk.Auth/                    # Retained documentation and release history
+    ├── CHANGELOG.md                    # Solution-level changelog
+    └── docs/                           # Component guides (this folder)
 ```
 
 ---
