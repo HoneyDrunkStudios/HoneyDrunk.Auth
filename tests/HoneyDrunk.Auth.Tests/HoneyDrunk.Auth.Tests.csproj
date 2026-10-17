@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\HoneyDrunk.Auth.Canary\HoneyDrunk.Auth.Canary.csproj" />
     <ProjectReference Include="..\..\src\HoneyDrunk.Auth.Abstractions\HoneyDrunk.Auth.Abstractions.csproj" />
     <ProjectReference Include="..\..\src\HoneyDrunk.Auth.AspNetCore\HoneyDrunk.Auth.AspNetCore.csproj" />
     <ProjectReference Include="..\..\src\HoneyDrunk.Auth\HoneyDrunk.Auth.csproj" />
