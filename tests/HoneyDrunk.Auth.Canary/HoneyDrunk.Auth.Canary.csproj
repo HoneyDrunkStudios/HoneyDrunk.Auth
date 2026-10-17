@@ -21,8 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HoneyDrunk.Auth.Abstractions\HoneyDrunk.Auth.Abstractions.csproj" />
-    <ProjectReference Include="..\HoneyDrunk.Auth\HoneyDrunk.Auth.csproj" />
+    <ProjectReference Include="..\..\src\HoneyDrunk.Auth.Abstractions\HoneyDrunk.Auth.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\HoneyDrunk.Auth\HoneyDrunk.Auth.csproj" />
   </ItemGroup>
 
   <ItemGroup>

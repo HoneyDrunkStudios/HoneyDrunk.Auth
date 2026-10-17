@@ -82,8 +82,8 @@ var tenantId = identity.GetClaimValue(AuthClaimTypes.TenantId);
 
 ## 📖 Documentation
 
-- **[Abstractions Guide](../docs/Abstractions.md)** - Detailed documentation for all types
-- **[FILE_GUIDE.md](../docs/FILE_GUIDE.md)** - Complete architecture reference
+- **[Abstractions Guide](../../HoneyDrunk.Auth/docs/Abstractions.md)** - Detailed documentation for all types
+- **[FILE_GUIDE.md](../../HoneyDrunk.Auth/docs/FILE_GUIDE.md)** - Complete architecture reference
 
 ## ⚖️ License
 

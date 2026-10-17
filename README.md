@@ -1,5 +1,10 @@
 # HoneyDrunk.Auth
 
+## Repository layout
+
+Open `HoneyDrunk.Auth.slnx` from the repository root. Production projects live in `src/`, test and canary projects in `tests/`, and examples in `samples/` where present. Shared build configuration stays at the root; project names, namespaces and package identities are unchanged. Existing documentation and release-history locations are retained.
+
+
 [![PR](https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth/actions/workflows/pr.yml/badge.svg)](https://github.com/HoneyDrunkStudios/HoneyDrunk.Auth/actions/workflows/pr.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/download/dotnet/10.0)
@@ -203,7 +208,7 @@ app.MapGet("/protected", (HttpContext ctx) =>
 
 ```
 HoneyDrunk.Auth/
-├── HoneyDrunk.Auth.Abstractions/      # Pure contracts, no dependencies
+├── src/HoneyDrunk.Auth.Abstractions/      # Pure contracts, no dependencies
 │   ├── IAuthenticationProvider.cs     # Authentication contract
 │   ├── IAuthorizationPolicy.cs        # Authorization contract
 │   ├── AuthCredential.cs              # Credential representation
@@ -217,7 +222,7 @@ HoneyDrunk.Auth/
 │   ├── AuthorizationDenyCode.cs       # Authorization denial codes
 │   └── DenyReason.cs                  # Denial reason record
 │
-├── HoneyDrunk.Auth/                   # Core runtime (Kernel + Vault)
+├── src/HoneyDrunk.Auth/                   # Core runtime (Kernel + Vault)
 │   ├── Authentication/
 │   │   └── BearerTokenAuthenticationProvider.cs
 │   ├── Authorization/
@@ -236,7 +241,7 @@ HoneyDrunk.Auth/
 │       ├── HoneyDrunkAuthServiceCollectionExtensions.cs
 │       └── HoneyDrunkAuthBuilderExtensions.cs
 │
-├── HoneyDrunk.Auth.AspNetCore/        # ASP.NET Core integration
+├── src/HoneyDrunk.Auth.AspNetCore/        # ASP.NET Core integration
 │   ├── Middleware/
 │   │   └── HoneyDrunkAuthMiddleware.cs
 │   ├── Authorization/
@@ -247,8 +252,8 @@ HoneyDrunk.Auth/
 │       ├── HoneyDrunkAuthAspNetCoreServiceCollectionExtensions.cs
 │       └── HoneyDrunkAuthApplicationBuilderExtensions.cs
 │
-├── HoneyDrunk.Auth.Tests/             # Unit tests
-└── docs/                               # Complete documentation
+├── tests/HoneyDrunk.Auth.Tests/             # Unit tests
+└── HoneyDrunk.Auth/docs/                               # Complete documentation
 ```
 
 ### Dependency Diagram
@@ -286,9 +291,9 @@ HoneyDrunk.Auth/
 
 ### Package Documentation
 
-- **[HoneyDrunk.Auth.Abstractions README](HoneyDrunk.Auth/HoneyDrunk.Auth.Abstractions/README.md)** - Contracts/abstractions package
-- **[HoneyDrunk.Auth README](HoneyDrunk.Auth/HoneyDrunk.Auth/README.md)** - Runtime implementations package
-- **[HoneyDrunk.Auth.AspNetCore README](HoneyDrunk.Auth/HoneyDrunk.Auth.AspNetCore/README.md)** - ASP.NET Core integration
+- **[HoneyDrunk.Auth.Abstractions README](src/HoneyDrunk.Auth.Abstractions/README.md)** - Contracts/abstractions package
+- **[HoneyDrunk.Auth README](src/HoneyDrunk.Auth/README.md)** - Runtime implementations package
+- **[HoneyDrunk.Auth.AspNetCore README](src/HoneyDrunk.Auth.AspNetCore/README.md)** - ASP.NET Core integration
 
 ### Architecture & Guides
 

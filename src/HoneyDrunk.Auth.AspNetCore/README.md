@@ -212,9 +212,9 @@ When you call `AddHoneyDrunkAuthAspNetCore()`:
 
 ## 📖 Documentation
 
-- **[AspNetCore Guide](../docs/AspNetCore.md)** - Detailed middleware and extension documentation
-- **[DependencyInjection Guide](../docs/DependencyInjection.md)** - Service registration
-- **[FILE_GUIDE.md](../docs/FILE_GUIDE.md)** - Complete architecture reference
+- **[AspNetCore Guide](../../HoneyDrunk.Auth/docs/AspNetCore.md)** - Detailed middleware and extension documentation
+- **[DependencyInjection Guide](../../HoneyDrunk.Auth/docs/DependencyInjection.md)** - Service registration
+- **[FILE_GUIDE.md](../../HoneyDrunk.Auth/docs/FILE_GUIDE.md)** - Complete architecture reference
 
 ## ⚖️ License
 

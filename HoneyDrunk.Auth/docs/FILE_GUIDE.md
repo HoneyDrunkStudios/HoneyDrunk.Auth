@@ -336,7 +336,7 @@ Applications using HoneyDrunk.Auth:
 
 ### Official Documentation
 - [README.md](../../README.md) - Project overview and quick start
-- [CHANGELOG.md](../HoneyDrunk.Auth/CHANGELOG.md) - Version history
+- [CHANGELOG.md](../../src/HoneyDrunk.Auth/CHANGELOG.md) - Version history
 
 ### Related Projects
 - [HoneyDrunk.Kernel](https://github.com/HoneyDrunkStudios/HoneyDrunk.Kernel) - Core Grid primitives
