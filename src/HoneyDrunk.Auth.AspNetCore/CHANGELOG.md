@@ -5,6 +5,27 @@ All notable changes to HoneyDrunk.Auth.AspNetCore will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.2] - 2026-11-05
+
+### Changed
+
+- Refresh NuGet dependencies and adopt upstream package releases in dependency order. Preserve target frameworks and public contracts.
+
+| Dependency | Previous | Updated |
+| --- | --- | --- |
+| HoneyDrunk.Audit.Abstractions | 0.2.1 | 0.2.2 |
+| HoneyDrunk.Kernel.Abstractions | 0.8.1 | 0.8.2 |
+| HoneyDrunk.Standards | 0.3.0 | 0.4.3 |
+| HoneyDrunk.Standards.Tests | 0.3.0 | 0.4.3 |
+| HoneyDrunk.Vault | 0.8.1 | 0.8.2 |
+| HoneyDrunk.Vault.EventGrid | 0.8.1 | 0.8.2 |
+| HoneyDrunk.Vault.Providers.AppConfiguration | 0.8.1 | 0.8.2 |
+| HoneyDrunk.Vault.Providers.AzureKeyVault | 0.8.1 | 0.8.2 |
+| Microsoft.AspNetCore.TestHost | 10.0.12 | 10.0.14 |
+| Microsoft.CodeAnalysis.NetAnalyzers | 10.0.401 | 10.0.403 |
+| Microsoft.Extensions.Configuration | 10.0.12 | 10.0.14 |
+| Microsoft.Extensions.Configuration.Binder | 10.0.12 | 10.0.14 |
+
 ## [0.6.1] - 2026-09-26
 
 ### Changed
