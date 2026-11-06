@@ -114,10 +114,13 @@ public sealed class VaultSigningKeyProvider(
         {
             var keys = JsonSerializer.Deserialize<List<SigningKeyInfoDto>>(json, JsonOptions) ?? [];
 
-            return [.. keys
+            return
+            [
+                .. keys
                 .Where(k => !string.IsNullOrWhiteSpace(k.Kid) && !string.IsNullOrWhiteSpace(k.Key))
                 .Select(k => new SigningKeyInfo(k.Kid!, k.Alg ?? "HS256", k.Key!, k.Active ?? true))
-                .Where(IsValidBase64Key)];
+                .Where(IsValidBase64Key),
+            ];
         }
         catch (JsonException ex)
         {

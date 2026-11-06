@@ -1,28 +1,32 @@
-// ============================================================================
-// HoneyDrunk.Auth Canary
-// ============================================================================
-// This is a canary project that validates HoneyDrunk.Auth behaves correctly
-// in real hosting scenarios. It crashes loudly (non-zero exit code) when
-// invariants are violated.
-//
-// Run: dotnet run
-//
-// Exit codes:
-//   0  = All checks passed
-//   10 = Guard: Missing Kernel check failed
-//   11 = Guard: Missing Vault check failed
-//   20 = Happy path authentication failed
-//   30 = MissingClaim code not returned for missing custom claim
-//   31 = MissingClaim code not returned for missing sub
-//   40 = Cache last-known-good fallback failed
-//   41 = TTL expiry + Vault down: expected LKG success or VaultUnavailable
-//   50 = Unknown kid refresh failed
-//   51 = Unknown kid with vault down did not return VaultUnavailable
-//   60 = PolicyNotFound indistinguishable from generic Deny
-//   70 = Purity boundary violation detected
-//   80 = Secret boundary violation detected
-//   99 = Unexpected error
-// ============================================================================
+// Copyright (c) HoneyDrunk Studios. All rights reserved.
+
+/*
+============================================================================
+HoneyDrunk.Auth Canary
+============================================================================
+This is a canary project that validates HoneyDrunk.Auth behaves correctly
+in real hosting scenarios. It crashes loudly (non-zero exit code) when
+invariants are violated.
+
+Run: dotnet run
+
+Exit codes:
+  0  = All checks passed
+  10 = Guard: Missing Kernel check failed
+  11 = Guard: Missing Vault check failed
+  20 = Happy path authentication failed
+  30 = MissingClaim code not returned for missing custom claim
+  31 = MissingClaim code not returned for missing sub
+  40 = Cache last-known-good fallback failed
+  41 = TTL expiry + Vault down: expected LKG success or VaultUnavailable
+  50 = Unknown kid refresh failed
+  51 = Unknown kid with vault down did not return VaultUnavailable
+  60 = PolicyNotFound indistinguishable from generic Deny
+  70 = Purity boundary violation detected
+  80 = Secret boundary violation detected
+  99 = Unexpected error
+============================================================================
+*/
 
 using HoneyDrunk.Audit.Abstractions;
 using HoneyDrunk.Auth;

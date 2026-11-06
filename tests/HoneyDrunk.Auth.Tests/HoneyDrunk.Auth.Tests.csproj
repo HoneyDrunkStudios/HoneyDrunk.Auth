@@ -13,11 +13,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HoneyDrunk.Standards" Version="0.4.3">
+    <PackageReference Include="HoneyDrunk.Standards" Version="0.4.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="HoneyDrunk.Standards.Tests" Version="0.4.3" PrivateAssets="all" />
+    <PackageReference Include="HoneyDrunk.Standards.Tests" Version="0.4.4" PrivateAssets="all" />
     <PackageReference Include="HoneyDrunk.Vault.EventGrid" Version="0.8.2" />
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.14" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.23.0" />
