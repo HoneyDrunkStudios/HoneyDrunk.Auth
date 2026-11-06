@@ -17,7 +17,7 @@ dotnet add package HoneyDrunk.Auth
 ```
 
 ```xml
-<PackageReference Include="HoneyDrunk.Auth" Version="0.6.1" />
+<PackageReference Include="HoneyDrunk.Auth" Version="0.6.2" />
 ```
 
 ## 🔧 Key Components
