@@ -2,7 +2,7 @@
 
 [![NuGet](https://img.shields.io/nuget/v/HoneyDrunk.Auth.AspNetCore.svg)](https://www.nuget.org/packages/HoneyDrunk.Auth.AspNetCore)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/download/dotnet/10.0)
+[![.NET 11](https://img.shields.io/badge/.NET-11.0-512BD4)](https://dotnet.microsoft.com/download/dotnet/11.0)
 
 > **ASP.NET Core integration for HoneyDrunk.Auth** - Middleware, identity accessors, and authorization endpoint helpers.
 
